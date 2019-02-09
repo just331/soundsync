@@ -2,10 +2,11 @@ package model
 
 import "github.com/go-bongo/bongo"
 
+// User is the model for attendees and DJs
 type User struct {
 	bongo.DocumentBase `bson:",inline"`
-	FirstName          string
-	LastName           string
-	Roles              []string
-	PhoneNum           string
+	FirstName          string   // First name of user
+	LastName           string   // Last name of user
+	Roles              []string // Roles the user has
+	PhoneNum           string   // Phone number of user
 }
