@@ -95,7 +95,7 @@ func SaveUser(myUser *User) error {
 
 // FindHostByID returns a Host given the Id
 func FindUserByID(id string) (*User, error) {
-	host := &User{}
+	user := &User{}
 	err := connection.Collection("user").FindById(bson.ObjectIdHex(id), user)
 	return user, err
 }
