@@ -7,6 +7,5 @@ type Host struct {
 	bongo.DocumentBase `bson:",inline"`
 	SpotifyAuth        string   // Auth token for spotify
 	PhoneNum           string   // Phone number of host
-	Code               string   // Code for phone number validation
 	Users              []string // Other users in this instance
 }

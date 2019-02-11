@@ -9,4 +9,5 @@ type User struct {
 	LastName           string   // Last name of user
 	Roles              []string // Roles the user has
 	PhoneNum           string   // Phone number of user
+	Code               string   // Code for phone number validation
 }
