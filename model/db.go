@@ -81,3 +81,59 @@ func DeleteHostByPhoneNum(phoneNum string) error {
 	err = DeleteHost(host)
 	return err
 }
+
+// SaveUser handles creating and updating a user
+func SaveUser(myUser *User) error {
+	err := connection.Collection("user").Save(myUser)
+	if vErr, ok := err.(*bongo.ValidationError); ok {
+		log.Fatal(vErr.Errors)
+	} else {
+		log.Fatal(err.Error())
+	}
+	return err
+}
+
+// FindHostByID returns a Host given the Id
+func FindUserByID(id string) (*User, error) {
+	user := &User{}
+	err := connection.Collection("user").FindById(bson.ObjectIdHex(id), user)
+	return user, err
+}
+
+// FindUserByPhoneNum returns a User given the phone number
+func FindUserByPhoneNum(phoneNum string) (*User, error) {
+	user := &User{}
+	err := connection.Collection("user").FindOne(bson.M{"PhoneNum:": phoneNum}, user)
+	return user, err
+}
+
+// DeleteUser deletes a User given user instance
+func DeleteUser(myUser *User) error {
+	err := connection.Collection("user").DeleteDocument(myUser)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
+}
+
+// DeleteUserByID deletes a User given a User id
+func DeleteUserByID(id string) error {
+	user, err := FindUserByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = DeleteUser(user)
+	return err
+}
+
+// DeleteUserByPhoneNum deletes a User given a User phone number
+func DeleteUserByPhoneNum(phoneNum string) error {
+	user, err := FindUserByPhoneNum(phoneNum)
+	if err != nil {
+		return err
+	}
+
+	err = DeleteUser(user)
+	return err
+}
