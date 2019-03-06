@@ -17,15 +17,26 @@ var (
 )
 
 func main() {
-	// Routes
-	http.HandleFunc("/hostparty", HostParty)
+	router := mux.NewRouter()
 
-	// I'll be right by your side till 3005
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	// API
+	router.HandleFunc("/CreateParty/{phoneNum}/{name}", api.CreateParty).Methods("POST")
+	router.HandleFunc("/JoinParty/{name}/{partyCode}", api.JoinParty).Methods("POST")
+	router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
+
+	//TODO: Find out what this endpoint needs and returns
+	router.HandleFunc("/LinkSpotify/").Methods("POST")
+	router.HandleFunc("/SearchSongs/{songName}", api.SearchSongs).Methods("GET")
+	router.HandleFunc("/AddSong/{songId}/{partyId}", api.AddSong).Methods("POST")
+	router.HandleFunc("/SongQueue/{partyId}", api.SongQueue).Methods("GET")
+	router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
+	router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
+
+	log.Fatal(http.ListenAndServe(":"+port, router))
 	fmt.Println("Listening on port: " + port)
 }
 
-func HostParty(w http.ResponseWriter, r *http.Request) {
+func CreateParty(w http.ResponseWriter, r *http.Request) {
 	host := &model.Host{}
 	err := json.NewDecoder(r.Body).Decode(host)
 	if err != nil {

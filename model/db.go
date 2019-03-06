@@ -1,29 +1,40 @@
 package model
 
 import (
+	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-bongo/bongo"
 )
 
 var (
-	config = &bongo.Config{
-		ConnectionString: "",
-		Database:         "soundsync",
-	}
-
-	connection, connErr = bongo.Connect(config)
+	connectionStr = os.Getenv("connectionStr")
+	dbName        = "soundsync"
+	ctx, _        = context.WithTimeout(context.Background(), 10*time.Second)
+	client        *mongo.Client
+	db            *mongo.Database
 )
 
 func init() {
-	config.ConnectionString = os.Getenv("DefaultConnection")
+	client, _ = mongo.NewClient(options.Client().ApplyURI(connectionStr))
+	connErr := client.Connect(ctx)
+	db = client.Database(dbName)
 
-	connection, connErr = bongo.Connect(config)
 	if connErr != nil {
-		log.Fatal(connErr)
+		panic(connErr)
 	}
+
+	err := client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func GetHost(phoneNum) error {
+
 }
 
 // SaveHost handles creating and updating a host
