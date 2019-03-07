@@ -17,6 +17,7 @@ func CreateParty(w http.ResponseWriter, r *http.Request) {
 	name := params["name"]
 
   // Generate random code
+	// TODO: Verify uniqueness
 	rand.Seed(time.Now().UnixNano())
 	const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	partyCode := make([]byte, codeLength)
