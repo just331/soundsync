@@ -35,19 +35,23 @@ func init() {
 }
 
 func CreateParty(partyName, phoneNum, nickname, partyCode string) (Party, error) {
+	var users []string
 	user := &User{}
 	party := &Party{}
 	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
 
-	err := db.Collection.FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(&user)
+	err := db.Collection("Users").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(&user)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	users = append(users, user.NickName)
 
 	partyBson := bson.M{
 		"partyName":   partyName,
 		"spotifyAuth": "", // User will add spotify later
 		"partyCode":   partyCode,
+		"users":       users,
 	}
 
 	db.Collection("Party").InsertOne(ctx, partyBson)
