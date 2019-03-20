@@ -9,21 +9,10 @@ import (
 	"github.com/joshuaj1397/soundsync/model"
 )
 
-var codeLength = 6
-
 func CreateParty(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	phoneNum := params["phoneNum"]
 	name := params["name"]
-
-  // Generate random code
-	// TODO: Verify uniqueness
-	rand.Seed(time.Now().UnixNano())
-	const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	partyCode := make([]byte, codeLength)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
 
 	party, err := model.CreateParty(phoneNum, name, partyCode)
 	if err != nil {
