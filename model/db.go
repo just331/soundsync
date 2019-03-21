@@ -2,12 +2,14 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -25,6 +27,7 @@ func init() {
 	client, _ = mongo.NewClient(options.Client().ApplyURI(connectionStr))
 	connErr := client.Connect(ctx)
 	db = client.Database(dbName)
+	fmt.Println("Connected to MongoDB")
 
 	if connErr != nil {
 		panic(connErr)
@@ -88,9 +91,8 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 		}
 
 		// Put the Id of the user in the users slice for the party
+		users = append(users, string(fmt.Sprintf("%v", Id.(primitive.ObjectID))))
 	}
-
-	users = append(users, user.NickName)
 
 	partyBson := bson.M{
 		"partyName":   partyName,
