@@ -23,7 +23,7 @@ func CreateParty(w http.ResponseWriter, r *http.Request) {
 
 func JoinParty(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	partyCode := (arams["partyCode"])
+	partyCode := params["partyCode"]
 	name := params["name"]
 	party, err := model.JoinParty(partyCode, name)
 	if err != nil {
