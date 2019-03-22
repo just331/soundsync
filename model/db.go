@@ -122,3 +122,23 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	gotwilio.SendMsg(phoneNum, "Your party code is: "+string(partyCode))
 	return string(partyCode), nil
 }
+
+func JoinParty(partyCode, nickname, phoneNum string) {
+	party := &Party{}
+	user := &User{}
+	err := db.Collection("Party").FindOne(ctx, bson.M{"code": partyCode}).Decode(party)
+
+	err = db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
+
+	// We didn't find a user for that phone number
+	if err != nil {
+		Id, err := CreateUser(phoneNum, nickname, "attendee")
+		if err != nil {
+			log.Fatal(err)
+		}
+		party.Users = append(party.Users, Id.(primitive.ObjectID))
+	} else {
+		party.Users = append(party.Users, user.ID)
+	}
+	db.Collection("Party").UpdateOne(ctx, bson.M{"code": partyCode}, bson.M{"users": party.Users})
+}

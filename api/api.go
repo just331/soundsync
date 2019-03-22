@@ -24,17 +24,18 @@ func CreateParty(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(partyCode)
 }
 
-// func JoinParty(w http.ResponseWriter, r *http.Request) {
-// 	params := mux.Vars(r)
-// 	partyCode := params["partyCode"]
-// 	name := params["name"]
-// 	party, err := model.JoinParty(partyCode, name)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	json.NewEncoder(w).Encode(party)
-// }
-//
+func JoinParty(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	partyCode := params["partyCode"]
+	nickname := params["nickname"]
+	phoneNum := params["phoneNum"]
+	party, err := model.JoinParty(partyCode, nickname, phoneNum)
+	if err != nil {
+		log.Fatal(err)
+	}
+	json.NewEncoder(w).Encode(party)
+}
+
 // func Verify(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
 // 	phoneNum := params["phoneNum"]

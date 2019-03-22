@@ -18,7 +18,7 @@ func main() {
 
 	// API
 	router.HandleFunc("/CreateParty/{nickname}/{phoneNum}/{partyName}", api.CreateParty).Methods("POST")
-	// router.HandleFunc("/JoinParty/{name}/{partyCode}", api.JoinParty).Methods("POST")
+	router.HandleFunc("/JoinParty/{nickname}/{partyCode}/{phoneNum}", api.JoinParty).Methods("POST")
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
 	//TODO: Find out what this endpoint needs and returns
