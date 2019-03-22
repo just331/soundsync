@@ -9,6 +9,7 @@ import (
 	"github.com/joshuaj1397/soundsync/model"
 )
 
+// CreateParty returns the party code so the host can send it out to others
 func CreateParty(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
@@ -16,11 +17,11 @@ func CreateParty(w http.ResponseWriter, r *http.Request) {
 	nickname := params["nickname"]
 	partyName := params["partyName"]
 
-	party, err := model.CreateParty(partyName, phoneNum, nickname)
+	partyCode, err := model.CreateParty(partyName, phoneNum, nickname)
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.NewEncoder(w).Encode(party)
+	json.NewEncoder(w).Encode(partyCode)
 }
 
 // func JoinParty(w http.ResponseWriter, r *http.Request) {

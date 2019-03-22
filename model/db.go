@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/joshuaj1397/gotwilio"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -51,8 +53,6 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 		userCode[i] = numberBytes[rand.Intn(len(numberBytes))]
 	}
 
-	//TODO: Send that code to the phoneNum using Twilio
-
 	userBson := bson.M{
 		"nickName": nickname,
 		"phoneNum": phoneNum,
@@ -65,11 +65,27 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	gotwilio.SendMsg(phoneNum, "Your user verification code is: "+string(userCode))
 	return res.InsertedID, nil
 }
 
+func VerifyUser(phoneNum, userCode string) error {
+	user := &User{}
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+
+	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
+	if err != nil {
+		log.Fatal(err)
+		return errors.New("User not found with that phone number")
+	}
+
+	_, err = db.Collection("User").UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"verified": true})
+	return nil
+}
+
 func CreateParty(partyName, phoneNum, nickname string) (string, error) {
-	var users []string
+	var users []primitive.ObjectID
 	user := &User{}
 	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -82,7 +98,7 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 		partyCode[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 
-	err := db.Collection("Users").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(&user)
+	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
 	// We didn't find a user
 	if err != nil {
 		Id, err := CreateUser(phoneNum, nickname, "host")
@@ -91,7 +107,9 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 		}
 
 		// Put the Id of the user in the users slice for the party
-		users = append(users, string(fmt.Sprintf("%v", Id.(primitive.ObjectID))))
+		users = append(users, Id.(primitive.ObjectID))
+	} else {
+		users = append(users, user.ID)
 	}
 
 	partyBson := bson.M{
@@ -102,5 +120,6 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	}
 
 	db.Collection("Party").InsertOne(ctx, partyBson)
+	gotwilio.SendMsg(phoneNum, "Your party code is: "+string(partyCode))
 	return string(partyCode), nil
 }
