@@ -74,13 +74,12 @@ func VerifyUser(phoneNum, userCode string) error {
 	user := &User{}
 	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
 
-	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
-	if err != nil {
-		log.Fatal(err)
-		return errors.New("User not found with that phone number")
+	if user.Code == userCode {
+		_, err := db.Collection("User").UpdateOne(ctx, bson.M{"phoneNum": phoneNum}, bson.M{"verified": true})
+		if err != nil {
+			return errors.New("User not found with that phone number")
+		}
 	}
-
-	_, err = db.Collection("User").UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"verified": true})
 	return nil
 }
 
