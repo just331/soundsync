@@ -1,139 +1,125 @@
 package model
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/go-bongo/bongo"
+	"github.com/joshuaj1397/gotwilio"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
-	config = &bongo.Config{
-		ConnectionString: "",
-		Database:         "soundsync",
-	}
-
-	connection, connErr = bongo.Connect(config)
+	connectionStr = os.Getenv("connectionStr")
+	dbName        = "soundsync"
+	ctx, _        = context.WithTimeout(context.Background(), 10*time.Second)
+	client        *mongo.Client
+	db            *mongo.Database
+	codeLength    = 6
 )
 
 func init() {
-	config.ConnectionString = os.Getenv("DefaultConnection")
+	client, _ = mongo.NewClient(options.Client().ApplyURI(connectionStr))
+	connErr := client.Connect(ctx)
+	db = client.Database(dbName)
+	fmt.Println("Connected to MongoDB")
 
-	connection, connErr = bongo.Connect(config)
 	if connErr != nil {
-		log.Fatal(connErr)
+		panic(connErr)
 	}
-}
 
-// SaveHost handles creating and updating a host
-func SaveHost(myHost *Host) error {
-	err := connection.Collection("host").Save(myHost)
-	if vErr, ok := err.(*bongo.ValidationError); ok {
-		log.Fatal(vErr.Errors)
-	} else {
-		log.Fatal(err.Error())
-	}
-	return err
-}
-
-// FindHostByID returns a Host given the Id
-func FindHostByID(id string) (*Host, error) {
-	host := &Host{}
-	err := connection.Collection("host").FindById(bson.ObjectIdHex(id), host)
-	return host, err
-}
-
-// FindHostByPhoneNum returns a Host given the phone number
-func FindHostByPhoneNum(phoneNum string) (*Host, error) {
-	host := &Host{}
-	err := connection.Collection("host").FindOne(bson.M{"PhoneNum:": phoneNum}, host)
-	return host, err
-}
-
-// DeleteHost deletes a Host given host instance
-func DeleteHost(myHost *Host) error {
-	err := connection.Collection("host").DeleteDocument(myHost)
+	err := client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return err
 }
 
-// DeleteHostByID deletes a Host given a Host id
-func DeleteHostByID(id string) error {
-	host, err := FindHostByID(id)
-	if err != nil {
-		return err
+func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
+	var roles []string
+	roles = append(roles, role)
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+
+	rand.Seed(time.Now().UnixNano())
+	const numberBytes = "0123456789"
+	userCode := make([]byte, codeLength)
+	for i := range userCode {
+		userCode[i] = numberBytes[rand.Intn(len(numberBytes))]
 	}
 
-	err = DeleteHost(host)
-	return err
-}
-
-// DeleteHostByPhoneNum deletes a Host given a Host phone number
-func DeleteHostByPhoneNum(phoneNum string) error {
-	host, err := FindHostByPhoneNum(phoneNum)
-	if err != nil {
-		return err
+	userBson := bson.M{
+		"nickName": nickname,
+		"phoneNum": phoneNum,
+		"role":     roles,
+		"code":     string(userCode),
+		"verified": false,
 	}
 
-	err = DeleteHost(host)
-	return err
-}
-
-// SaveUser handles creating and updating a user
-func SaveUser(myUser *User) error {
-	err := connection.Collection("user").Save(myUser)
-	if vErr, ok := err.(*bongo.ValidationError); ok {
-		log.Fatal(vErr.Errors)
-	} else {
-		log.Fatal(err.Error())
-	}
-	return err
-}
-
-// FindHostByID returns a Host given the Id
-func FindUserByID(id string) (*User, error) {
-	user := &User{}
-	err := connection.Collection("user").FindById(bson.ObjectIdHex(id), user)
-	return user, err
-}
-
-// FindUserByPhoneNum returns a User given the phone number
-func FindUserByPhoneNum(phoneNum string) (*User, error) {
-	user := &User{}
-	err := connection.Collection("user").FindOne(bson.M{"PhoneNum:": phoneNum}, user)
-	return user, err
-}
-
-// DeleteUser deletes a User given user instance
-func DeleteUser(myUser *User) error {
-	err := connection.Collection("user").DeleteDocument(myUser)
+	res, err := db.Collection("User").InsertOne(ctx, userBson)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return err
+
+	gotwilio.SendMsg(phoneNum, "Your user verification code is: "+string(userCode))
+	return res.InsertedID, nil
 }
 
-// DeleteUserByID deletes a User given a User id
-func DeleteUserByID(id string) error {
-	user, err := FindUserByID(id)
+func VerifyUser(phoneNum, userCode string) error {
+	user := &User{}
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+
+	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
 	if err != nil {
-		return err
+		log.Fatal(err)
+		return errors.New("User not found with that phone number")
 	}
 
-	err = DeleteUser(user)
-	return err
+	_, err = db.Collection("User").UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"verified": true})
+	return nil
 }
 
-// DeleteUserByPhoneNum deletes a User given a User phone number
-func DeleteUserByPhoneNum(phoneNum string) error {
-	user, err := FindUserByPhoneNum(phoneNum)
-	if err != nil {
-		return err
+func CreateParty(partyName, phoneNum, nickname string) (string, error) {
+	var users []primitive.ObjectID
+	user := &User{}
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+
+	// Generate random code
+	// TODO: Verify uniqueness
+	rand.Seed(time.Now().UnixNano())
+	const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	partyCode := make([]byte, codeLength)
+	for i := range partyCode {
+		partyCode[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 
-	err = DeleteUser(user)
-	return err
+	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
+	// We didn't find a user
+	if err != nil {
+		Id, err := CreateUser(phoneNum, nickname, "host")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Put the Id of the user in the users slice for the party
+		users = append(users, Id.(primitive.ObjectID))
+	} else {
+		users = append(users, user.ID)
+	}
+
+	partyBson := bson.M{
+		"partyName":   partyName,
+		"spotifyAuth": "", // User will add spotify later
+		"partyCode":   string(partyCode),
+		"users":       users,
+	}
+
+	db.Collection("Party").InsertOne(ctx, partyBson)
+	gotwilio.SendMsg(phoneNum, "Your party code is: "+string(partyCode))
+	return string(partyCode), nil
 }
