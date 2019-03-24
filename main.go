@@ -33,7 +33,7 @@ func main() {
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
 	//TODO: Find out what this endpoint needs and returns
-	// router.HandleFunc("/LinkSpotify/").Methods("POST")
+	router.HandleFunc("/LinkSpotify/", api.LinkSpotify).Methods("POST")
 	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
 	// router.HandleFunc("/AddSong/{songId}/{partyId}", api.AddSong).Methods("POST")
 	// router.HandleFunc("/SongQueue/{partyId}", api.SongQueue).Methods("GET")

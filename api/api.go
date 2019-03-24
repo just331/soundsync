@@ -10,6 +10,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/model"
+	"github.com/zmb3/spotify"
 )
 
 var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
@@ -73,11 +74,61 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(status)
 // }
 
-// func LinkSpotify(w http.ResponseWriter, r *http.Request) {
-// 	params := mux.Vars(r)
-// 	//TODO: Make call to spotify API
-// 	json.NewEncoder(w).Encode(spotifyUserId)
-// }
+// LinkSpotify bla bla
+func LinkSpotify(w http.ResponseWriter, r *http.Request) {
+	//TODO: Make call to spotify API
+
+	/// CHANGE THIS TO SOUNDSYNC URL
+	// this is the page you will be redirected to after
+	// spotify finishes authentication
+	const redirectURI = "http://localhost:8080/callback"
+
+	var (
+		auth  = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate)
+		ch    = make(chan *spotify.Client)
+		state = "ThisIsTheStateSession"
+	)
+
+	// first start an HTTP server
+	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		tok, err := auth.Token(state, r)
+		if err != nil {
+			http.Error(w, "Couldn't get token", http.StatusForbidden)
+			log.Fatal(err)
+		}
+		if st := r.FormValue("state"); st != state {
+			http.NotFound(w, r)
+			log.Fatalf("State mismatch: %s != %s\n", st, state)
+		}
+		// use the token to get an authenticated client
+		client := auth.NewClient(tok)
+		fmt.Fprintf(w, "Login Completed!")
+		ch <- &client
+	})
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Got request for:", r.URL.String())
+	})
+	go http.ListenAndServe(":8080", nil)
+
+	/////// THIS IS THE LINK WHERE USERS LOG IN TO SPOTIFY ////////
+	// the link contains the client id (from SPOTIFY_ID env var)
+	// the link also contains 'redirectURI' from above
+	// probably open this in a new tab
+	url := auth.AuthURL(state)
+	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
+	//////////////
+
+	// wait for auth to complete
+	client := <-ch
+
+	// use the client to make calls that require authorization
+	user, err := client.CurrentUser()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("You are logged in as:", user.ID)
+}
+
 //
 // func SearchSpotify(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
