@@ -5,20 +5,31 @@ import (
 	"log"
 	"net/http"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/api"
 )
 
 var (
-	port = "3005"
+	port         = "3005"
+	mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
 )
+
+var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
+})
 
 func main() {
 	router := mux.NewRouter()
 
 	// API
-	router.HandleFunc("/CreateParty/{nickname}/{phoneNum}/{partyName}", api.CreateParty).Methods("POST")
-	router.HandleFunc("/JoinParty/{nickname}/{partyCode}/{phoneNum}", api.JoinParty).Methods("POST")
+	router.Handle("/GetToken", api.GetToken).Methods("GET")
+	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
+	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
 	//TODO: Find out what this endpoint needs and returns

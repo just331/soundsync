@@ -2,15 +2,40 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/model"
 )
 
+var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
+
+var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	/* Create the token */
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// Create a map to store our claims
+	claims := token.Claims.(jwt.MapClaims)
+
+	/* Set token claims */
+	claims["admin"] = true
+	claims["name"] = "Joshua Johnson"
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	/* Sign the token with our secret */
+	tokenString, _ := token.SignedString(mySigningKey)
+	fmt.Println("I singed a token senpai!")
+
+	/* Finally, write the token to the browser window */
+	w.Write([]byte(tokenString))
+})
+
 // CreateParty returns the party code so the host can send it out to others
-func CreateParty(w http.ResponseWriter, r *http.Request) {
+var CreateParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	phoneNum := params["phoneNum"]
@@ -22,19 +47,19 @@ func CreateParty(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	json.NewEncoder(w).Encode(partyCode)
-}
+})
 
-func JoinParty(w http.ResponseWriter, r *http.Request) {
+var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	partyCode := params["partyCode"]
 	nickname := params["nickname"]
 	phoneNum := params["phoneNum"]
-	party, err := model.JoinParty(partyCode, nickname, phoneNum)
+	err := model.JoinParty(partyCode, nickname, phoneNum)
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.NewEncoder(w).Encode(party)
-}
+	json.NewEncoder(w).Encode("Party joined")
+})
 
 // func Verify(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
