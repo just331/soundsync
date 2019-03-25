@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -58,7 +57,6 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 		"phoneNum": phoneNum,
 		"role":     roles,
 		"code":     string(userCode),
-		"verified": false,
 	}
 
 	res, err := db.Collection("User").InsertOne(ctx, userBson)
@@ -66,22 +64,7 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 		log.Fatal(err)
 	}
 
-	gotwilio.SendMsg(phoneNum, "Your user verification code is: "+string(userCode))
 	return res.InsertedID, nil
-}
-
-func VerifyUser(phoneNum, userCode string) error {
-	user := &User{}
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
-
-	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
-	if err != nil {
-		log.Fatal(err)
-		return errors.New("User not found with that phone number")
-	}
-
-	_, err = db.Collection("User").UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"verified": true})
-	return nil
 }
 
 func CreateParty(partyName, phoneNum, nickname string) (string, error) {
@@ -122,4 +105,25 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	db.Collection("Party").InsertOne(ctx, partyBson)
 	gotwilio.SendMsg(phoneNum, "Your party code is: "+string(partyCode))
 	return string(partyCode), nil
+}
+
+func JoinParty(partyCode, nickname, phoneNum string) error {
+	party := &Party{}
+	user := &User{}
+	err := db.Collection("Party").FindOne(ctx, bson.M{"code": partyCode}).Decode(party)
+
+	err = db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
+
+	// We didn't find a user for that phone number
+	if err != nil {
+		Id, err := CreateUser(phoneNum, nickname, "attendee")
+		if err != nil {
+			return err
+		}
+		party.Users = append(party.Users, Id.(primitive.ObjectID))
+	} else {
+		party.Users = append(party.Users, user.ID)
+	}
+	db.Collection("Party").UpdateOne(ctx, bson.M{"code": partyCode}, bson.M{"users": party.Users})
+	return nil
 }
