@@ -3,17 +3,47 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/model"
-	"github.com/zmb3/spotify"
 )
 
-var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
+const redirectURI = "http://localhost:3005/callback"
+
+var (
+	mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
+	// State spotify session state, should be unique for each party instance i.e. not static
+	State = "mySuperCoolState"
+	// myClientID spotify client id environment variable
+	myClientID = os.Getenv("SPOTIFY_ID")
+	// mySecretShh spotify client secret environment variable
+	mySecretShh = os.Getenv("SPOTIFY_SECRET")
+	// AuthCode Spotify authorization code for getting access tokens.  Returned from /authorize spotify endpoint
+	AuthCode = ""
+)
+
+var html = `
+<br/>
+<a href="/MediaControls/Play">Play</a><br/>
+<a href="/MediaControls/Pause">Pause</a><br/>
+<a href="/MediaControls/Next">Next track</a><br/>
+<a href="/MediaControls/Previous">Previous Track</a><br/>
+`
+
+type spotTokenResp struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	Scope        string `json:"scope"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	/* Create the token */
@@ -71,71 +101,155 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // 	if err != nil {
 // 		log.Fatal(err)
 // 	}
+
 // 	json.NewEncoder(w).Encode(status)
 // }
 
-// LinkSpotify bla bla
+// Spotify related routes
+
+// LinkSpotify Login/Authenticates Soundsync with spotify by asking user to sign in
+// user must have premium or student spotify account spotify account
+// Must have SPOTIFY_ID and SPOTIFY_SECRET environment variables
 func LinkSpotify(w http.ResponseWriter, r *http.Request) {
-	//TODO: Make call to spotify API
-
-	/// CHANGE THIS TO SOUNDSYNC URL
-	// this is the page you will be redirected to after
-	// spotify finishes authentication
-	const redirectURI = "http://localhost:8080/callback"
-
-	var (
-		auth  = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate)
-		ch    = make(chan *spotify.Client)
-		state = "ThisIsTheStateSession"
-	)
-
-	// first start an HTTP server
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		tok, err := auth.Token(state, r)
-		if err != nil {
-			http.Error(w, "Couldn't get token", http.StatusForbidden)
-			log.Fatal(err)
-		}
-		if st := r.FormValue("state"); st != state {
-			http.NotFound(w, r)
-			log.Fatalf("State mismatch: %s != %s\n", st, state)
-		}
-		// use the token to get an authenticated client
-		client := auth.NewClient(tok)
-		fmt.Fprintf(w, "Login Completed!")
-		ch <- &client
-	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Got request for:", r.URL.String())
-	})
-	go http.ListenAndServe(":8080", nil)
-
-	/////// THIS IS THE LINK WHERE USERS LOG IN TO SPOTIFY ////////
-	// the link contains the client id (from SPOTIFY_ID env var)
-	// the link also contains 'redirectURI' from above
-	// probably open this in a new tab
-	url := auth.AuthURL(state)
-	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
-	//////////////
-
-	// wait for auth to complete
-	client := <-ch
-
-	// use the client to make calls that require authorization
-	user, err := client.CurrentUser()
+	fmt.Println("Received Request: /LinkSpotify")
+	var scopes = "user-read-private user-read-email"
+	var URL *url.URL
+	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
-		log.Fatal(err)
+		panic("boom")
 	}
-	fmt.Println("You are logged in as:", user.ID)
+	URL.Path += "/authorize"
+	parameters := url.Values{}
+	parameters.Add("client_id", myClientID)
+	parameters.Add("response_type", "code")
+	parameters.Add("redirect_uri", redirectURI)
+	parameters.Add("state", State)
+	parameters.Add("scope", scopes)
+	URL.RawQuery = parameters.Encode()
+
+	// asks user to sign in and redirects to redirectUri (/callback)
+	http.Redirect(w, r, URL.String(), 301)
 }
 
-//
+// SpotifyCallback Redirected here after authorization to receive authCode
+// authCode can be exchanged for an access token
+func SpotifyCallback(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /SpotifyCallback")
+	urlParams := r.URL.Query()
+	AuthCode = urlParams.Get("code")
+
+	getSpotToken()
+}
+
+func getSpotToken() {
+	var sTokResp spotTokenResp
+	var URL *url.URL
+	URL, err := url.Parse("https://accounts.spotify.com")
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "/api/token"
+
+	// body of post request
+	formData := url.Values{
+		"grant_type":    {"authorization_code"},
+		"code":          {AuthCode},
+		"redirect_uri":  {redirectURI},
+		"client_id":     {myClientID},
+		"client_secret": {mySecretShh},
+	}
+
+	response, err := http.PostForm(URL.String(), formData)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+
+	// read the payload
+	body, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// pass a pointer for the response type
+	err = json.Unmarshal(body, &sTokResp)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println()
+	fmt.Println(sTokResp.AccessToken)
+	fmt.Println(sTokResp.RefreshToken)
+	fmt.Println(sTokResp.ExpiresIn)
+	fmt.Println(sTokResp.TokenType)
+	fmt.Println(sTokResp.Scope)
+	fmt.Println()
+}
+
+// MediaControls handels play, pause, next, and previous controls
+// func MediaControls(w http.ResponseWriter, r *http.Request) {
+// 	action := strings.TrimPrefix(r.URL.Path, "/MediaControls/")
+// 	fmt.Println("Got request for:", action)
+
+// 	fmt.Println(SpotifyClient)
+
+// 	switch action {
+// 	case "Play":
+// 		SpotifyClient.Play()
+// 	case "Pause":
+// 		SpotifyClient.Pause()
+// 	case "Next":
+// 		SpotifyClient.Next()
+// 	case "Previous":
+// 		SpotifyClient.Previous()
+// 	}
+
+// 	w.Header().Set("Content-Type", "text/html")
+// 	fmt.Fprintf(w, html)
+
+// }
+
+// SearchSpotify
 // func SearchSpotify(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
 // 	query := params["query"]
-// 	//TODO: Make call to spotify API
-// 	json.NewEncoder(w).Encode(songs)
+
+// 	config := &clientcredentials.Config{
+// 		ClientID:     os.Getenv("SPOTIFY_ID"),
+// 		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+// 		TokenURL:     spotify.TokenURL,
+// 	}
+// // 	token, err := config.Token(context.Background())
+// 	if err != nil {
+// 		log.Fatalf("couldn't get token: %v", err)
+// 	}
+
+// 	client := spotify.Authenticator{}.NewClient(token)
+// 	// search for playlists and albums containing query
+// 	results, err := client.Search(query, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	// handle album results
+// 	if results.Albums != nil {
+// 		fmt.Println("Albums:")
+// 		for _, item := range results.Albums.Albums {
+// 			fmt.Println("   ", item.Name)
+// 		}
+// 	}
+// 	// handle playlist results
+// 	if results.Playlists != nil {
+// 		fmt.Println("Playlists:")
+// 		for _, item := range results.Playlists.Playlists {
+// 			fmt.Println("   ", item.Name)
+// 		}
+// 	}
 // }
+
 //
 // func AddSong(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)

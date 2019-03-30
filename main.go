@@ -33,12 +33,15 @@ func main() {
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
 	//TODO: Find out what this endpoint needs and returns
-	router.HandleFunc("/LinkSpotify/", api.LinkSpotify).Methods("POST")
-	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
+	router.HandleFunc("/LinkSpotify", api.LinkSpotify).Methods("GET")
+	router.HandleFunc("/callback", api.SpotifyCallback).Methods("GET")
+	// router.HandleFunc("/MediaControls/Play", api.MediaControls).Methods("POST")
+	// router.HandleFunc("/MediaControls/Pause", api.MediaControls).Methods("POST")
+	//router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
 	// router.HandleFunc("/AddSong/{songId}/{partyId}", api.AddSong).Methods("POST")
 	// router.HandleFunc("/SongQueue/{partyId}", api.SongQueue).Methods("GET")
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
-	// router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
+	// router.HandleFunc("/RemoveSong/{songId}/{partyI 	d}", api.RemoveSong).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":"+port, router))
 	fmt.Println("Listening on port: " + port)
