@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,12 +28,16 @@ var (
 	myClientID = os.Getenv("SPOTIFY_ID")
 	// mySecretShh spotify client secret environment variable
 	mySecretShh = os.Getenv("SPOTIFY_SECRET")
-	// scopes restriction of spotify actions.  We only need read and modify current playback state and queue
-	scopes = "user-read-playback-state user-modify-playback-state"
 	// AuthCode Spotify authorization code for getting access tokens.  Returned from /authorize spotify endpoint
 	AuthCode = ""
-	sAcsTok  spotAccessTokenResp
-	sTracks  spotTrackSearchResponse
+	// scopes restriction of spotify actions.  We only need read and modify current playback state and queue
+	scopes  = "user-read-playback-state user-modify-playback-state playlist-modify-public user-read-private"
+	sAcsTok spotAccessTokenResp
+	sTracks spotTrackSearchResponse
+	// partyName will be used for creating the playlist
+	partyName        = "Joseph's SuperCoolPParty"
+	sCurrentUser     spotUser
+	sCurrentPlaylist spotPlaylist
 )
 
 var html = `
@@ -47,6 +52,21 @@ type spotAccessTokenResp struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+// spotify user
+type spotUser struct {
+	DisplayName string `json:"display_name"`
+	UserID      string `json:"id"`
+	// AccountLevel is the subscription level, "premium", "free", etc.
+	AccountLevel string `json:"product"`
+}
+
+// spotify playlist
+type spotPlaylist struct {
+	PlaylistName string `json:"name"`
+	// PLaylistURI used to play this playlist
+	PlaylistURI string `json:"uri"`
 }
 
 // search Track structure
@@ -127,7 +147,7 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(status)
 // }
 
-// Spotify related routes
+// SPOTIFY RELATED ROUTES
 
 // LinkSpotify Login/Authenticates Soundsync with spotify by asking user to sign in
 // user must have premium or student spotify account spotify account
@@ -180,6 +200,8 @@ func SpotifyCallback(w http.ResponseWriter, r *http.Request) {
 	AuthCode = urlParams.Get("code")
 
 	getSpotToken()
+	getCurrentUser()
+	createPlaylist()
 }
 
 func getSpotToken() {
@@ -221,11 +243,10 @@ func getSpotToken() {
 	}
 
 	fmt.Println()
-	fmt.Println("Access")
-	fmt.Println(sAcsTok.AccessToken)
-	fmt.Println(sAcsTok.RefreshToken)
-	fmt.Println(sAcsTok.ExpiresIn)
-	fmt.Println()
+	fmt.Println("Access Tokens:")
+	fmt.Printf("\t:Access Token: %s\n", sAcsTok.AccessToken)
+	fmt.Printf("\t:Refresh Token: %s\n", sAcsTok.RefreshToken)
+	fmt.Printf("\t:Expires In: %s\n", strconv.Itoa(sAcsTok.ExpiresIn))
 }
 
 func refreshAccessToken() {
@@ -265,11 +286,11 @@ func refreshAccessToken() {
 		panic(err)
 	}
 
+	fmt.Println()
 	fmt.Println("Refresh")
 	fmt.Println(sAcsTok.AccessToken)
 	fmt.Println(sAcsTok.RefreshToken)
 	fmt.Println(sAcsTok.ExpiresIn)
-	fmt.Println()
 }
 
 // PlayPause handels play and pause controls
@@ -390,11 +411,103 @@ func SearchSpotify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Search results for first track in list and first artist linked to that track
+	fmt.Println()
+	fmt.Println("Search Information:")
 	fmt.Printf("\t:Track Name: %s\n", sTracks.Tracks.Items[0].TrackName)
 	fmt.Printf("\t:Track ID: %s\n", sTracks.Tracks.Items[0].TrackID)
 	fmt.Printf("\t:Is Explicit: %s\n", strconv.FormatBool(sTracks.Tracks.Items[0].Explicit))
 	fmt.Printf("\t:Artist Name: %s\n", sTracks.Tracks.Items[0].Artists[0].ArtistName)
 	fmt.Printf("\t:Artist ID: %s\n", sTracks.Tracks.Items[0].Artists[0].ArtistID)
+}
+
+func getCurrentUser() {
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "v1/me"
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", URL.String(), nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(body, &sCurrentUser)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println()
+	fmt.Println("User Information:")
+	fmt.Printf("\t:User Name: %s\n", sCurrentUser.DisplayName)
+	fmt.Printf("\t:User ID: %s\n", sCurrentUser.UserID)
+	fmt.Printf("\t:User account type: %s\n", sCurrentUser.AccountLevel)
+
+	defer resp.Body.Close()
+}
+
+func createPlaylist() {
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "v1/users/" + sCurrentUser.UserID + "/playlists"
+
+	reqBody := map[string]interface{}{
+		"name":        partyName,
+		"description": "My party created by SoundSync",
+	}
+
+	bytesRepresentation, err := json.Marshal(reqBody)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", URL.String(), bytes.NewBuffer(bytesRepresentation))
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(body, &sCurrentPlaylist)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println()
+	fmt.Println("Playlist Information:")
+	fmt.Printf("\t:Playlist Name: %s\n", sCurrentPlaylist.PlaylistName)
+	fmt.Printf("\t:Playlist URI: %s\n", sCurrentPlaylist.PlaylistURI)
+
+	defer resp.Body.Close()
 }
 
 //
