@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ var (
 	// AuthCode Spotify authorization code for getting access tokens.  Returned from /authorize spotify endpoint
 	AuthCode = ""
 	sAcsTok  spotAccessTokenResp
+	sTracks  spotTrackSearchResponse
 )
 
 var html = `
@@ -45,6 +47,24 @@ type spotAccessTokenResp struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+// search Track structure
+type spotTrackSearchResponse struct {
+	Tracks spotTracks `json:"tracks"`
+}
+type spotTracks struct {
+	Items []spotifyTrack `json:"items"`
+}
+type spotifyTrack struct {
+	TrackName string          `json:"name"`
+	Artists   []spotifyArtist `json:"artists"`
+	Explicit  bool            `json:"explicit"`
+	TrackID   string          `json:"id"`
+}
+type spotifyArtist struct {
+	ArtistID   string `json:"id"`
+	ArtistName string `json:"name"`
 }
 
 var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -144,6 +164,7 @@ func LinkSpotify(w http.ResponseWriter, r *http.Request) {
 
 	log.Println()
 	log.Println()
+	// IMPORTANT
 	// display this to the user.  it is where they will sign in to spotify
 	// this is just html, we could just inject this into the frontend
 	log.Println(string(body))
@@ -323,43 +344,58 @@ func NextPrev(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// SearchSpotify
-// func SearchSpotify(w http.ResponseWriter, r *http.Request) {
-// 	params := mux.Vars(r)
-// 	query := params["query"]
+// SearchSpotify searches spotify by the track name
+func SearchSpotify(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /SearchSpotify")
+	params := mux.Vars(r)
+	query := params["query"]
+	fmt.Println("Query: " + query)
 
-// 	config := &clientcredentials.Config{
-// 		ClientID:     os.Getenv("SPOTIFY_ID"),
-// 		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-// 		TokenURL:     spotify.TokenURL,
-// 	}
-// // 	token, err := config.Token(context.Background())
-// 	if err != nil {
-// 		log.Fatalf("couldn't get token: %v", err)
-// 	}
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "/v1/search"
+	parameters := url.Values{}
+	parameters.Add("q", query)
+	parameters.Add("type", "track")
+	// limit the number of results.  Default: 20
+	parameters.Add("limit", "20")
+	URL.RawQuery = parameters.Encode()
 
-// 	client := spotify.Authenticator{}.NewClient(token)
-// 	// search for playlists and albums containing query
-// 	results, err := client.Search(query, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// get html for user to sign in to
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", URL.String(), nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
 
-// 	// handle album results
-// 	if results.Albums != nil {
-// 		fmt.Println("Albums:")
-// 		for _, item := range results.Albums.Albums {
-// 			fmt.Println("   ", item.Name)
-// 		}
-// 	}
-// 	// handle playlist results
-// 	if results.Playlists != nil {
-// 		fmt.Println("Playlists:")
-// 		for _, item := range results.Playlists.Playlists {
-// 			fmt.Println("   ", item.Name)
-// 		}
-// 	}
-// }
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(body, &sTracks)
+	if err != nil {
+		panic(err)
+	}
+
+	// Search results for first track in list and first artist linked to that track
+	fmt.Printf("\t:Track Name: %s\n", sTracks.Tracks.Items[0].TrackName)
+	fmt.Printf("\t:Track ID: %s\n", sTracks.Tracks.Items[0].TrackID)
+	fmt.Printf("\t:Is Explicit: %s\n", strconv.FormatBool(sTracks.Tracks.Items[0].Explicit))
+	fmt.Printf("\t:Artist Name: %s\n", sTracks.Tracks.Items[0].Artists[0].ArtistName)
+	fmt.Printf("\t:Artist ID: %s\n", sTracks.Tracks.Items[0].Artists[0].ArtistID)
+}
 
 //
 // func AddSong(w http.ResponseWriter, r *http.Request) {
