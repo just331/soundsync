@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -25,8 +26,11 @@ var (
 	myClientID = os.Getenv("SPOTIFY_ID")
 	// mySecretShh spotify client secret environment variable
 	mySecretShh = os.Getenv("SPOTIFY_SECRET")
+	// scopes restriction of spotify actions.  We only need read and modify current playback state and queue
+	scopes = "user-read-playback-state user-modify-playback-state"
 	// AuthCode Spotify authorization code for getting access tokens.  Returned from /authorize spotify endpoint
 	AuthCode = ""
+	sAcsTok  spotAccessTokenResp
 )
 
 var html = `
@@ -37,10 +41,8 @@ var html = `
 <a href="/MediaControls/Previous">Previous Track</a><br/>
 `
 
-type spotTokenResp struct {
+type spotAccessTokenResp struct {
 	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	Scope        string `json:"scope"`
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -112,7 +114,6 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // Must have SPOTIFY_ID and SPOTIFY_SECRET environment variables
 func LinkSpotify(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received Request: /LinkSpotify")
-	var scopes = "user-read-private user-read-email"
 	var URL *url.URL
 	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
@@ -127,8 +128,27 @@ func LinkSpotify(w http.ResponseWriter, r *http.Request) {
 	parameters.Add("scope", scopes)
 	URL.RawQuery = parameters.Encode()
 
-	// asks user to sign in and redirects to redirectUri (/callback)
-	http.Redirect(w, r, URL.String(), 301)
+	fmt.Println("Visit this to log into spotify:")
+	fmt.Println(URL.String())
+
+	// get html for user to sign in to
+	resp, err := http.Get(URL.String())
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println()
+	log.Println()
+	// display this to the user.  it is where they will sign in to spotify
+	// this is just html, we could just inject this into the frontend
+	log.Println(string(body))
+	log.Println()
+	log.Println()
 }
 
 // SpotifyCallback Redirected here after authorization to receive authCode
@@ -142,7 +162,6 @@ func SpotifyCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSpotToken() {
-	var sTokResp spotTokenResp
 	var URL *url.URL
 	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
@@ -155,6 +174,51 @@ func getSpotToken() {
 		"grant_type":    {"authorization_code"},
 		"code":          {AuthCode},
 		"redirect_uri":  {redirectURI},
+		"client_id":     {myClientID},
+		"client_secret": {mySecretShh},
+	}
+
+	resp, err := http.PostForm(URL.String(), formData)
+	if err != nil {
+		panic(err)
+	}
+
+	defer resp.Body.Close()
+
+	// read the payload
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// pass a pointer for the response type
+	err = json.Unmarshal(body, &sAcsTok)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println()
+	fmt.Println("Access")
+	fmt.Println(sAcsTok.AccessToken)
+	fmt.Println(sAcsTok.RefreshToken)
+	fmt.Println(sAcsTok.ExpiresIn)
+	fmt.Println()
+}
+
+func refreshAccessToken() {
+	var URL *url.URL
+	URL, err := url.Parse("https://accounts.spotify.com")
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "/api/token"
+
+	// body of post request
+	formData := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {sAcsTok.RefreshToken},
 		"client_id":     {myClientID},
 		"client_secret": {mySecretShh},
 	}
@@ -174,43 +238,90 @@ func getSpotToken() {
 	}
 
 	// pass a pointer for the response type
-	err = json.Unmarshal(body, &sTokResp)
+	err = json.Unmarshal(body, &sAcsTok)
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println()
-	fmt.Println(sTokResp.AccessToken)
-	fmt.Println(sTokResp.RefreshToken)
-	fmt.Println(sTokResp.ExpiresIn)
-	fmt.Println(sTokResp.TokenType)
-	fmt.Println(sTokResp.Scope)
+	fmt.Println("Refresh")
+	fmt.Println(sAcsTok.AccessToken)
+	fmt.Println(sAcsTok.RefreshToken)
+	fmt.Println(sAcsTok.ExpiresIn)
 	fmt.Println()
 }
 
-// MediaControls handels play, pause, next, and previous controls
-// func MediaControls(w http.ResponseWriter, r *http.Request) {
-// 	action := strings.TrimPrefix(r.URL.Path, "/MediaControls/")
-// 	fmt.Println("Got request for:", action)
+// PlayPause handels play and pause controls
+func PlayPause(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /MediaControls")
+	action := strings.TrimPrefix(r.URL.Path, "/MediaControls/")
+	fmt.Println("Action:", action)
 
-// 	fmt.Println(SpotifyClient)
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic(err)
+	}
+	URL.Path += "/v1/me/player"
 
-// 	switch action {
-// 	case "Play":
-// 		SpotifyClient.Play()
-// 	case "Pause":
-// 		SpotifyClient.Pause()
-// 	case "Next":
-// 		SpotifyClient.Next()
-// 	case "Previous":
-// 		SpotifyClient.Previous()
-// 	}
+	client := &http.Client{}
 
-// 	w.Header().Set("Content-Type", "text/html")
-// 	fmt.Fprintf(w, html)
+	switch action {
+	case "Play":
+		URL.Path += "/play"
+	case "Pause":
+		URL.Path += "/pause"
+	}
 
-// }
+	req, err := http.NewRequest("PUT", URL.String(), nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+// NextPrev handels next and previous controls
+func NextPrev(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /MediaControls")
+	action := strings.TrimPrefix(r.URL.Path, "/MediaControls/")
+	fmt.Println("Action:", action)
+
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic(err)
+	}
+	URL.Path += "/v1/me/player"
+
+	client := &http.Client{}
+
+	switch action {
+	case "Next":
+		URL.Path += "/next"
+	case "Previous":
+		URL.Path += "/previous"
+	}
+
+	req, err := http.NewRequest("POST", URL.String(), nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+}
 
 // SearchSpotify
 // func SearchSpotify(w http.ResponseWriter, r *http.Request) {
@@ -270,18 +381,6 @@ func getSpotToken() {
 // 		log.Fatal(err)
 // 	}
 // 	json.NewEncoder(w).Encode(songQueue)
-// }
-//
-// func SkipSong(w http.ResponseWriter, r *http.Request) {
-// 	params := mux.Vars(r)
-// 	songId := params["songId"]
-// 	partyId := params["partyId"]
-// 	//TODO: Make call to spotify API
-// 	status, err := model.SkipSong(songId, partyId)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	json.NewEncoder(w).Encode(status)
 // }
 //
 // func RemoveSong(w http.ResponseWriter, r *http.Request) {
