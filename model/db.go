@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -10,7 +9,7 @@ import (
 	"time"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/joshuaj1397/go-twilio"
+	"github.com/joshuaj1397/gotwilio"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -58,7 +57,6 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 		"phoneNum": phoneNum,
 		"role":     roles,
 		"code":     string(userCode),
-		"verified": false,
 	}
 
 	res, err := db.Collection("User").InsertOne(ctx, userBson)
@@ -66,21 +64,7 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 		log.Fatal(err)
 	}
 
-	gotwilio.SendMsg(phoneNum, "Your user verification code is: "+string(userCode))
 	return res.InsertedID, nil
-}
-
-func VerifyUser(phoneNum, userCode string) error {
-	user := &User{}
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
-
-	if user.Code == userCode {
-		_, err := db.Collection("User").UpdateOne(ctx, bson.M{"phoneNum": phoneNum}, bson.M{"verified": true})
-		if err != nil {
-			return errors.New("User not found with that phone number")
-		}
-	}
-	return nil
 }
 
 func CreateParty(partyName, phoneNum, nickname string) (string, error) {
@@ -123,7 +107,7 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	return string(partyCode), nil
 }
 
-func JoinParty(partyCode, nickname, phoneNum string) {
+func JoinParty(partyCode, nickname, phoneNum string) error {
 	party := &Party{}
 	user := &User{}
 	err := db.Collection("Party").FindOne(ctx, bson.M{"code": partyCode}).Decode(party)
@@ -134,11 +118,12 @@ func JoinParty(partyCode, nickname, phoneNum string) {
 	if err != nil {
 		Id, err := CreateUser(phoneNum, nickname, "attendee")
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		party.Users = append(party.Users, Id.(primitive.ObjectID))
 	} else {
 		party.Users = append(party.Users, user.ID)
 	}
 	db.Collection("Party").UpdateOne(ctx, bson.M{"code": partyCode}, bson.M{"users": party.Users})
+	return nil
 }
