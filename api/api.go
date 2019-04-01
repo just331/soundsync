@@ -1,7 +1,7 @@
 package api
 
 import (
-	"../../app"
+	"../../main"
 	"context"
 	_ "crypto/sha512"
 	"encoding/json"
@@ -56,7 +56,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		},
 	}
 	state := r.URL.Query().Get("state")
-	session, err := app.Store.Get(r, "state")
+	session, err := main.Store.Get(r, "state")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -81,7 +81,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	session, err = app.Store.Get(r, "auth-session")
+	session, err = main.Store.Get(r, "auth-session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

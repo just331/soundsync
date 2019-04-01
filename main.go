@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	auth0 "github.com/auth0-community/go-auth0"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/joshuaj1397/soundsync/api"
 	jose "gopkg.in/square/go-jose.v2"
 )
@@ -18,7 +20,14 @@ var (
 	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
 	auth0Secret   = os.Getenv("AUTH0_CLIENT_SECRET")
 	auth0Audience = os.Getenv("AUTH0_AUDIENCE")
+	Store         *sessions.FilesystemStore
 )
+
+func Init() error {
+	Store = sessions.NewFilesystemStore("", []byte("something-very-secret"))
+	gob.Register(map[string]interface{}{})
+	return nil
+}
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
