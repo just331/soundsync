@@ -17,15 +17,16 @@ var (
 	auth0Domain   = os.Getenv("AUTH0_DOMAIN")
 	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
 	auth0Secret   = os.Getenv("AUTH0_CLIENT_SECRET")
+	auth0Audience = os.Getenv("AUTH0_AUDIENCE")
 )
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		secretProvider := auth0.NewKeyProvider(auth0Secret)
-		audience := []string{"{YOUR-AUTH0-API-AUDIENCE}"}
+		audience := []string{auth0Audience}
 
-		configuration := auth0.NewConfiguration(secretProvider, audience, "https://"+auth0Domain+".auth0.com/", jose.HS256)
-		validator := auth0.NewValidator(configuration)
+		configuration := auth0.NewConfiguration(secretProvider, audience, "https://"+auth0Domain, jose.HS256)
+		validator := auth0.NewValidator(configuration, nil)
 
 		token, err := validator.ValidateRequest(r)
 
@@ -44,11 +45,9 @@ func main() {
 	router := mux.NewRouter()
 
 	// API
-	router.Handle("/GetToken", api.GetToken).Methods("GET")
 	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
-	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
-
+	router.Handle("/Callbackauth0", api.Callbackauth0).Methods("Get")
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
 	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
