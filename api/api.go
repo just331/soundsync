@@ -1,17 +1,15 @@
 package api
 
 import (
-	_ "../app"
 	"context"
 	_ "crypto/sha512"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"github.com/just331/soundsync/app"
+	"github.com/just331/soundsync/model"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/model"
 )
 
 // CreateParty returns the party code so the host can send it out to others
@@ -74,6 +72,16 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Getting now the userInfo
+	client := conf.Client(context.TODO(), token)
+	resp, err := client.Get("https://" + domain + "/userinfo")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
 
 	var profile map[string]interface{}
 	if err = json.NewDecoder(resp.Body).Decode(&profile); err != nil {
