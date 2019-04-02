@@ -1,17 +1,17 @@
 package api
 
 import (
-	"../../main"
+	_ "../app"
 	"context"
 	_ "crypto/sha512"
 	"encoding/json"
-
+	"github.com/just331/soundsync/app"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/joshuaj1397/soundsync/model"
+	"github.com/just331/soundsync/model"
 )
 
 // CreateParty returns the party code so the host can send it out to others
@@ -56,7 +56,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		},
 	}
 	state := r.URL.Query().Get("state")
-	session, err := main.Store.Get(r, "state")
+	session, err := app.Store.Get(r, "state")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -81,7 +81,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	session, err = main.Store.Get(r, "auth-session")
+	session, err = app.Store.Get(r, "auth-session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
