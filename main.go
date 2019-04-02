@@ -40,9 +40,9 @@ func main() {
 	router.HandleFunc("/MediaControls/Next", api.NextPrev).Methods("POST")
 	router.HandleFunc("/MediaControls/Previous", api.NextPrev).Methods("POST")
 	router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
+	router.HandleFunc("/AddSong/{songURI}", api.AddSong).Methods("POST")
+	// router.HandleFunc("/SongQueue", api.SongQueue).Methods("GET")
 	// router.HandleFunc("/CurrentSong", api.MediaControls).Methods("GET")
-	// router.HandleFunc("/AddSong/{songId}/{partyId}", api.AddSong).Methods("POST")
-	// router.HandleFunc("/SongQueue/{partyId}", api.SongQueue).Methods("GET")
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
 	// router.HandleFunc("/RemoveSong/{songId}/{partyI 	d}", api.RemoveSong).Methods("POST")
 

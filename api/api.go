@@ -35,7 +35,7 @@ var (
 	sAcsTok spotAccessTokenResp
 	sTracks spotTrackSearchResponse
 	// partyName will be used for creating the playlist
-	partyName        = "Joseph's SuperCoolPParty"
+	partyName        = time.Now().Format("2006-01-02 3:4:5")
 	sCurrentUser     spotUser
 	sCurrentPlaylist spotPlaylist
 )
@@ -65,8 +65,8 @@ type spotUser struct {
 // spotify playlist
 type spotPlaylist struct {
 	PlaylistName string `json:"name"`
-	// PLaylistURI used to play this playlist
-	PlaylistURI string `json:"uri"`
+	PlaylistURI  string `json:"uri"`
+	PlaylistID   string `json:"id"`
 }
 
 // search Track structure
@@ -74,15 +74,16 @@ type spotTrackSearchResponse struct {
 	Tracks spotTracks `json:"tracks"`
 }
 type spotTracks struct {
-	Items []spotifyTrack `json:"items"`
+	Items []spotTrack `json:"items"`
 }
-type spotifyTrack struct {
-	TrackName string          `json:"name"`
-	Artists   []spotifyArtist `json:"artists"`
-	Explicit  bool            `json:"explicit"`
-	TrackID   string          `json:"id"`
+type spotTrack struct {
+	TrackName string       `json:"name"`
+	Artists   []spotArtist `json:"artists"`
+	Explicit  bool         `json:"explicit"`
+	TrackID   string       `json:"id"`
+	TrackURI  string       `json:"uri"`
 }
-type spotifyArtist struct {
+type spotArtist struct {
 	ArtistID   string `json:"id"`
 	ArtistName string `json:"name"`
 }
@@ -157,7 +158,7 @@ func LinkSpotify(w http.ResponseWriter, r *http.Request) {
 	var URL *url.URL
 	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "/authorize"
 	parameters := url.Values{}
@@ -208,7 +209,7 @@ func getSpotToken() {
 	var URL *url.URL
 	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "/api/token"
 
@@ -253,7 +254,7 @@ func refreshAccessToken() {
 	var URL *url.URL
 	URL, err := url.Parse("https://accounts.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "/api/token"
 
@@ -375,7 +376,7 @@ func SearchSpotify(w http.ResponseWriter, r *http.Request) {
 	var URL *url.URL
 	URL, err := url.Parse("https://api.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "/v1/search"
 	parameters := url.Values{}
@@ -420,11 +421,53 @@ func SearchSpotify(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("\t:Artist ID: %s\n", sTracks.Tracks.Items[0].Artists[0].ArtistID)
 }
 
+// AddSong adds a song to the queue ((playlist))
+func AddSong(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /AddSong")
+	params := mux.Vars(r)
+	encodedTrackURI := params["songURI"]
+	trackURI, err := url.QueryUnescape(encodedTrackURI)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Track URI: " + trackURI)
+
+	var URL *url.URL
+	URL, err = url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic(err)
+	}
+	URL.Path += "v1/playlists/" + sCurrentPlaylist.PlaylistID + "/tracks"
+
+	reqBody := make(map[string][]string)
+	reqBody["uris"] = append(reqBody["uris"], trackURI)
+	bytesRepresentation, err := json.Marshal(reqBody)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", URL.String(), bytes.NewBuffer(bytesRepresentation))
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+
+	// resp body contains playlist "snapshot_id"
+	_, err = client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// gets the currently logged in user
 func getCurrentUser() {
 	var URL *url.URL
 	URL, err := url.Parse("https://api.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "v1/me"
 
@@ -460,11 +503,12 @@ func getCurrentUser() {
 	defer resp.Body.Close()
 }
 
+// creates a playlist on the currently logged in users (hosts) account
 func createPlaylist() {
 	var URL *url.URL
 	URL, err := url.Parse("https://api.spotify.com")
 	if err != nil {
-		panic("boom")
+		panic(err)
 	}
 	URL.Path += "v1/users/" + sCurrentUser.UserID + "/playlists"
 
@@ -510,18 +554,6 @@ func createPlaylist() {
 	defer resp.Body.Close()
 }
 
-//
-// func AddSong(w http.ResponseWriter, r *http.Request) {
-// 	params := mux.Vars(r)
-// 	songId := params["songId"]
-// 	partyId := params["partyId"]
-// 	status, err := model.AddSong(songId, partyId)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	json.NewEncoder(w).Encode(status)
-// }
-//
 // func SongQueue(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
 // 	partyId := params["partyId"]
@@ -531,6 +563,7 @@ func createPlaylist() {
 // 	}
 // 	json.NewEncoder(w).Encode(songQueue)
 // }
+//
 //
 // func RemoveSong(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)
