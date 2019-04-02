@@ -75,7 +75,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 
 	// Getting now the userInfo
 	client := conf.Client(context.TODO(), token)
-	resp, err := client.Get("https://" + domain + "/userinfo")
+	resp, err := client.Get("https://" + domain)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
