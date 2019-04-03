@@ -1,12 +1,12 @@
 package api
 
 import (
+	"../app"
+	"../model"
 	"context"
 	_ "crypto/sha512"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/app"
-	"github.com/just331/soundsync/model"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"

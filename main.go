@@ -1,18 +1,18 @@
 package main
 
 import (
+	"./api"
+	"./app"
 	"fmt"
+	auth0 "github.com/auth0-community/go-auth0"
+	"github.com/gorilla/mux"
+	jose "gopkg.in/square/go-jose.v2"
 	"log"
 	"net/http"
 	"os"
-	auth0 "github.com/auth0-community/go-auth0"
-	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/api"
-	jose "gopkg.in/square/go-jose.v2"
 )
 
 var (
-
 	port          = "3005"
 	auth0Domain   = os.Getenv("AUTH0_DOMAIN")
 	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
@@ -41,10 +41,9 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-
 func main() {
 	router := mux.NewRouter()
-
+	app.Init()
 	// API
 	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
