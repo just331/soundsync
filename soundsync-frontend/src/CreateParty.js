@@ -52,49 +52,47 @@ function CreateParty({ classes }) {
 
   return (
     <div>
-      <form>
-        <Grid item sm={6}>
-          <TextField
-            id="partyName"
-            label="Party Name"
-            required
-            className={classes.textField}
-            value={values.partyName}
-            onChange={handleChange('partyName')}
-          />
-        </Grid>
-        <Grid item sm={6}>
-          <TextField
-            id="phoneNumber"
-            label="Phone Number"
-            required
-            className={classes.textField}
-            value={values.phoneNumber}
-            onChange={handleChange('phoneNumber')}
-          />
-        </Grid>
-        {values.isVerifyCodeSent ? (
-          <div>
-            <Grid item sm={6}>
-              <TextField
-                id="verifyCode"
-                label="Enter Verification Code"
-                required
-                className={classes.textField}
-                value={values.verifyCode}
-                onChange={handleChange('verifyCode')}
-              />
-            </Grid>
-            <Grid item sm={6}>
-              <Button variant="contained" color="primary" type="submit" onClick={handleCreateParty}>Create Party</Button>
-            </Grid>
-          </div>
-        ) : (
+      <Grid item sm={6}>
+        <TextField
+          id="partyName"
+          label="Party Name"
+          required
+          className={classes.textField}
+          value={values.partyName}
+          onChange={handleChange('partyName')}
+        />
+      </Grid>
+      <Grid item sm={6}>
+        <TextField
+          id="phoneNumber"
+          label="Phone Number"
+          required
+          className={classes.textField}
+          value={values.phoneNumber}
+          onChange={handleChange('phoneNumber')}
+        />
+      </Grid>
+      {values.isVerifyCodeSent ? (
+        <div>
           <Grid item sm={6}>
-            <Button variant="contained" color="primary" type="submit" onClick={handleSendVerify}>Send Verification Code</Button>
+            <TextField
+              id="verifyCode"
+              label="Enter Verification Code"
+              required
+              className={classes.textField}
+              value={values.verifyCode}
+              onChange={handleChange('verifyCode')}
+            />
           </Grid>
-        )}
-      </form>
+          <Grid item sm={6}>
+            <Button variant="contained" color="primary" type="submit" onClick={handleCreateParty}>Create Party</Button>
+          </Grid>
+        </div>
+      ) : (
+        <Grid item sm={6}>
+          <Button variant="contained" color="primary" type="submit" onClick={handleSendVerify}>Send Verification Code</Button>
+        </Grid>
+      )}
     </div>
   );
 }

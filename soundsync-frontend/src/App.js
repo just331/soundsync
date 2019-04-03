@@ -5,7 +5,7 @@ import {
     HashRouter
 } from "react-router-dom";
 import logo from './logo.svg';
-import CreateParty from './Create';
+import CreateParty from './CreateParty';
 import JoinParty from "./JoinParty";
 import Playlist from "./Playlist";
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
