@@ -9,6 +9,7 @@ import CreateParty from './Create';
 import JoinParty from "./JoinParty";
 import Playlist from "./Playlist";
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 
 const theme = createMuiTheme({
@@ -21,13 +22,15 @@ const theme = createMuiTheme({
 function App() {
   return (
     <MuiThemeProvider theme={theme}>
-      <HashRouter>
-        <Button variant="contained" color="primary"><NavLink to="/CreateParty">Create Party</NavLink></Button>
-        <Button><NavLink to="/">Join Party</NavLink></Button>
-        <Route exact path="/" component={JoinParty}/>
-        <Route path="/CreateParty" component={CreateParty}/>
-        <Route path="/playlist" component={Playlist}/>
-      </HashRouter>
+      <Grid container justify="center" alignItems="center" spacing={16}>
+        <HashRouter>
+          <Button variant="contained" color="primary"><NavLink to="/CreateParty">Create Party</NavLink></Button>
+          <Button variant="contained" color="primary"><NavLink to="/">Join Party</NavLink></Button>
+          <Route exact path="/" component={JoinParty}/>
+          <Route path="/CreateParty" component={CreateParty}/>
+          <Route path="/playlist" component={Playlist}/>
+        </HashRouter>
+      </Grid>
     </MuiThemeProvider>
   );
 }
