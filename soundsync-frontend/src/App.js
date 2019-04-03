@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import logo from './logo.svg';
 import CreateParty from './Create';
-import Home from "./Home";
+import JoinParty from "./JoinParty";
 import Playlist from "./Playlist";
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -22,10 +22,10 @@ function App() {
   return (
     <MuiThemeProvider theme={theme}>
       <HashRouter>
-        <Button variant="contained" color="primary"><NavLink to="/create">Create Party</NavLink></Button>
-        <Button><NavLink to="/">Rejoin Party</NavLink></Button>
-        <Route exact path="/" component={Home}/>
-        <Route path="/create" component={CreateParty}/>
+        <Button variant="contained" color="primary"><NavLink to="/CreateParty">Create Party</NavLink></Button>
+        <Button><NavLink to="/">Join Party</NavLink></Button>
+        <Route exact path="/" component={JoinParty}/>
+        <Route path="/CreateParty" component={CreateParty}/>
         <Route path="/playlist" component={Playlist}/>
       </HashRouter>
     </MuiThemeProvider>
