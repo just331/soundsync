@@ -1,11 +1,4 @@
-import React, { Component, useState } from "react";
-import Logo from './logo.png';
-import {
-    Route,
-    NavLink,
-    HashRouter
-} from "react-router-dom";
-import Playlist from "./Playlist";
+import React, { useState } from "react";
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
