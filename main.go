@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	auth0 "github.com/auth0-community/go-auth0"
 	"github.com/gorilla/mux"
 	"github.com/just331/soundsync/api"
@@ -13,6 +12,7 @@ import (
 )
 
 var (
+
 	port          = "3005"
 	auth0Domain   = os.Getenv("AUTH0_DOMAIN")
 	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
@@ -41,6 +41,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+
 func main() {
 	router := mux.NewRouter()
 
@@ -48,6 +49,7 @@ func main() {
 	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
 	router.Handle("/Callbackauth0", api.Callbackauth0).Methods("Get")
+
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
 	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")

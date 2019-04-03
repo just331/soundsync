@@ -55,6 +55,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 	}
 	state := r.URL.Query().Get("state")
 	session, err := app.Store.Get(r, "state")
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
