@@ -1,13 +1,9 @@
-import React, { useState } from "react";
-import {
-  TextField,
-  Grid,
-  Button,
-} from '@material-ui/core/';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useState } from 'react'
+import { TextField, Grid, Button } from '@material-ui/core/'
+import { withStyles } from '@material-ui/core/styles'
 
 const styles = (theme) => {
-  return ({
+  return {
     container: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -23,8 +19,8 @@ const styles = (theme) => {
     menu: {
       width: 200,
     },
-  })
-};
+  }
+}
 
 function CreateParty({ classes }) {
   const [values, setValues] = useState({
@@ -33,31 +29,31 @@ function CreateParty({ classes }) {
     partyName: '',
     verifyCode: '',
     isVerifyCodeSent: false,
-  });
+  })
 
-  const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
+  const handleChange = (name) => (event) => {
+    setValues({ ...values, [name]: event.target.value })
   }
 
   // TODO: When button is clicked POST data and verify if all fields are valid
-  const handleSendVerify = e => {
-    e.preventDefault();
-    setValues({ ...values, isVerifyCodeSent: true });
-    console.log("Verification code sent!");
+  const handleSendVerify = (e) => {
+    e.preventDefault()
+    setValues({ ...values, isVerifyCodeSent: true })
+    console.log('Verification code sent!')
   }
 
   // TODO: Make a POST to see if the verification code is correct before creating the party
-  const handleCreateParty = e => {
-    e.preventDefault();
-    console.log("Created a party!");
+  const handleCreateParty = (e) => {
+    e.preventDefault()
+    console.log('Created a party!')
   }
 
   return (
     <div>
       <Grid item sm={6}>
         <TextField
-          id="partyName"
-          label="Party Name"
+          id='partyName'
+          label='Party Name'
           required
           className={classes.textField}
           value={values.partyName}
@@ -66,8 +62,8 @@ function CreateParty({ classes }) {
       </Grid>
       <Grid item sm={6}>
         <TextField
-          id="phoneNumber"
-          label="Phone Number"
+          id='phoneNumber'
+          label='Phone Number'
           required
           className={classes.textField}
           value={values.phoneNumber}
@@ -78,8 +74,8 @@ function CreateParty({ classes }) {
         <div>
           <Grid item sm={6}>
             <TextField
-              id="verifyCode"
-              label="Enter Verification Code"
+              id='verifyCode'
+              label='Enter Verification Code'
               required
               className={classes.textField}
               value={values.verifyCode}
@@ -87,16 +83,30 @@ function CreateParty({ classes }) {
             />
           </Grid>
           <Grid item sm={6}>
-            <Button variant="contained" color="primary" type="submit" onClick={handleCreateParty}>Create Party</Button>
+            <Button
+              variant='contained'
+              color='primary'
+              type='submit'
+              onClick={handleCreateParty}
+            >
+              Create Party
+            </Button>
           </Grid>
         </div>
       ) : (
         <Grid item sm={6}>
-          <Button variant="contained" color="primary" type="submit" onClick={handleSendVerify}>Send Verification Code</Button>
+          <Button
+            variant='contained'
+            color='primary'
+            type='submit'
+            onClick={handleSendVerify}
+          >
+            Send Verification Code
+          </Button>
         </Grid>
       )}
     </div>
-  );
+  )
 }
 
-export default withStyles(styles)(CreateParty);
+export default withStyles(styles)(CreateParty)
