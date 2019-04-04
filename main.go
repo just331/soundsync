@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/api"
+	"github.com/joshuaj1397/soundsync/model"
 )
 
 var (
@@ -25,12 +28,12 @@ var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 
 func main() {
 	router := mux.NewRouter()
+	model.CreateDatabaseClient()
 
 	// API
 	router.Handle("/GetToken", api.GetToken).Methods("GET")
 	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
-	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
@@ -40,6 +43,17 @@ func main() {
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
 	// router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
-	fmt.Println("Listening on port: " + port)
+	go func() {
+		fmt.Println("Listening on port: " + port)
+		if err := http.ListenAndServe(":"+port, router); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	log.Println("Shutting down soundsync...")
+	os.Exit(0)
 }
