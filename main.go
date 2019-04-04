@@ -5,10 +5,14 @@ import (
 	"log"
 	"net/http"
 	"os"
-	auth0 "github.com/auth0-community/go-auth0"
+	"os/signal"
+
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/api"
-	jose "gopkg.in/square/go-jose.v2"
+	"github.com/joshuaj1397/soundsync/api"
+	"github.com/joshuaj1397/soundsync/model"
+
 )
 
 var (
@@ -20,7 +24,7 @@ var (
 	auth0Audience = os.Getenv("AUTH0_AUDIENCE")
 )
 
-func authMiddleware(next http.Handler) http.Handler {
+/*func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		secretProvider := auth0.NewKeyProvider(auth0Secret)
 		audience := []string{auth0Audience}
@@ -40,15 +44,17 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 	})
 }
-
+*/
 
 func main() {
 	router := mux.NewRouter()
+	model.CreateDatabaseClient()
 
 	// API
-	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
-	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
-	router.Handle("/Callbackauth0", api.Callbackauth0).Methods("Get")
+	router.Handle("/GetToken", api.GetToken).Methods("GET")
+	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
+	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
+
 
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
@@ -58,6 +64,17 @@ func main() {
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
 	// router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
-	fmt.Println("Listening on port: " + port)
+	go func() {
+		fmt.Println("Listening on port: " + port)
+		if err := http.ListenAndServe(":"+port, router); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	log.Println("Shutting down soundsync...")
+	os.Exit(0)
 }
