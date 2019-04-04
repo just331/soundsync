@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Route } from 'react-router-dom'
 import Party from './Party'
-import TextField from '@material-ui/core/TextField'
 import Grid from '@material-ui/core/Grid'
 import SoundSyncButton from 'components/Button'
 import SoundSyncNavLink from 'components/NavLink'
@@ -10,7 +9,18 @@ import { withStyles } from '@material-ui/core/styles'
 const styles = (theme) => {
   return {
     textField: {
-      width: '86vw',
+      placeholder: 'name',
+      color: '#333333',
+      height: '1vh',
+      backgroundColor: 'white',
+      borderRadius: '50px',
+      boxShadow: 'none',
+      border: '2px solid white',
+      padding: '20px',
+      minWidth: '300px',
+      '&::placeholder': {
+        color: '#666666',
+      },
     },
     ButtonContainer: {
       display: 'flex',
@@ -26,7 +36,7 @@ const styles = (theme) => {
       backgroundImage: `linear-gradient(${theme.palette.secondary.main}, ${
         theme.palette.primary.main
       })`,
-      padding: '160px 0px',
+      padding: '270px 0px',
       height: '100vh',
     },
   }
@@ -69,20 +79,18 @@ function JoinParty({ classes }) {
         </SoundSyncButton>
       </Grid>
       <Grid className={classes.Input} item xs={12}>
-        <TextField
+        <input
           id='partyCode'
-          label='Party Code'
-          required
+          placeholder='Party Code'
           className={classes.textField}
           value={values.partyCode}
           onChange={handleChange('partyCode')}
         />
       </Grid>
       <Grid className={classes.Input} item xs={12}>
-        <TextField
+        <input
           id='nickName'
-          label='Nickname'
-          required
+          placeholder='Nickname'
           className={classes.textField}
           value={values.nickName}
           onChange={handleChange('nickName')}
