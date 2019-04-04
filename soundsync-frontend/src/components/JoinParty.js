@@ -2,12 +2,29 @@ import React, { useState } from 'react'
 import { Route } from 'react-router-dom'
 import Party from './Party'
 import Grid from '@material-ui/core/Grid'
+import Typography from '@material-ui/core/Typography'
 import SoundSyncButton from 'components/Button'
 import SoundSyncNavLink from 'components/NavLink'
 import { withStyles } from '@material-ui/core/styles'
+import Logo from 'assets/logo.png'
 
 const styles = (theme) => {
   return {
+    LogoText: {
+      color: 'white',
+    },
+    ImageContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'column',
+    },
+    Image: {
+      width: '45vw',
+    },
+    ButtonField: {
+      width: '300px',
+    },
     textField: {
       placeholder: 'name',
       color: '#333333',
@@ -17,7 +34,8 @@ const styles = (theme) => {
       boxShadow: 'none',
       border: '2px solid white',
       padding: '20px',
-      minWidth: '300px',
+      margin: '10px 0px',
+      width: '300px',
       '&::placeholder': {
         color: '#666666',
       },
@@ -36,7 +54,6 @@ const styles = (theme) => {
       backgroundImage: `linear-gradient(${theme.palette.secondary.main}, ${
         theme.palette.primary.main
       })`,
-      padding: '270px 0px',
       height: '100vh',
     },
   }
@@ -78,6 +95,12 @@ function JoinParty({ classes }) {
           </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
+      <Grid className={classes.ImageContainer} item xs={12}>
+        <img className={classes.Image} src={Logo} alt='logo' />
+        <Typography className={classes.LogoText} variant='h4' gutterBottom>
+          soundsync
+        </Typography>
+      </Grid>
       <Grid className={classes.Input} item xs={12}>
         <input
           id='partyCode'
@@ -86,8 +109,6 @@ function JoinParty({ classes }) {
           value={values.partyCode}
           onChange={handleChange('partyCode')}
         />
-      </Grid>
-      <Grid className={classes.Input} item xs={12}>
         <input
           id='nickName'
           placeholder='Nickname'
@@ -95,8 +116,6 @@ function JoinParty({ classes }) {
           value={values.nickName}
           onChange={handleChange('nickName')}
         />
-      </Grid>
-      <Grid className={classes.Input} item xs={12}>
         <Route path='/Party' component={Party} />
         <SoundSyncButton
           variant='contained'
@@ -105,7 +124,11 @@ function JoinParty({ classes }) {
           className={classes.textField}
           onClick={handleJoinParty}
         >
-          <SoundSyncNavLink color='inherit' to='/Party'>
+          <SoundSyncNavLink
+            color='inherit'
+            to='/Party'
+            className={classes.ButtonField}
+          >
             Join Party
           </SoundSyncNavLink>
         </SoundSyncButton>
