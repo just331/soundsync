@@ -18,7 +18,10 @@ const styles = (theme) => {
   }
 }
 
-function SoundSyncButton({ children, classes, color, variant, onClick }) {
+function SoundSyncButton(
+  { children, classes, color, variant, onClick },
+  ...props
+) {
   return (
     <Button
       classes={{
@@ -29,6 +32,7 @@ function SoundSyncButton({ children, classes, color, variant, onClick }) {
       variant={variant}
       color={color}
       onClick={onClick}
+      {...props}
     >
       {children}
     </Button>
