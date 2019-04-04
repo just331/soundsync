@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joshuaj1397/soundsync/model"
 )
@@ -15,23 +13,7 @@ import (
 var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
 
 var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	/* Create the token */
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	// Create a map to store our claims
-	claims := token.Claims.(jwt.MapClaims)
-
-	/* Set token claims */
-	claims["admin"] = true
-	claims["name"] = "Joshua Johnson"
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
-	/* Sign the token with our secret */
-	tokenString, _ := token.SignedString(mySigningKey)
-	fmt.Println("I singed a token senpai!")
-
-	/* Finally, write the token to the browser window */
-	w.Write([]byte(tokenString))
+	fmt.Println(":)")
 })
 
 // CreateParty returns the party code so the host can send it out to others

@@ -27,7 +27,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// API
-	router.Handle("/GetToken", api.GetToken).Methods("GET")
+	router.Handle("/", api.GetToken).Methods("GET")
 	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")

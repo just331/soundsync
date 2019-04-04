@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import {
+    Route,
+    NavLink,
+} from "react-router-dom";
+import Party from "./Party";
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
@@ -39,10 +44,13 @@ function JoinParty({ classes }) {
   const handleJoinParty = e => {
     e.preventDefault();
     console.log("Joined Party!");
+
   }
 
   return (
     <div>
+      <Button variant="contained" color="primary"><NavLink to="/CreateParty">Create Party</NavLink></Button>
+      <Button variant="contained" color="primary"><NavLink to="/">Join Party</NavLink></Button>
       <Grid item sm={6}>
         <TextField
           id="partyCode"
@@ -64,7 +72,8 @@ function JoinParty({ classes }) {
         />
       </Grid>
       <Grid item sm={6}>
-        <Button variant="contained" color="primary" type="submit" onClick={handleJoinParty}>Join Party</Button>
+        <Route path="/Party" component={Party}/>
+        <Button variant="contained" color="primary" type="submit" onClick={handleJoinParty}><NavLink to="/Party">Join Party</NavLink></Button>
       </Grid>
     </div>
   )
