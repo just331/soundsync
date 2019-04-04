@@ -44,7 +44,13 @@ function MusicControl({ classes }) {
 
   // TODO: Change these menu icons to actual music player icons
   return (
-    <div>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignContent: 'center',
+      }}
+    >
       <BottomNavigation className={classes.musicControls}>
         <BottomNavigationAction
           onClick={handleRepeat}

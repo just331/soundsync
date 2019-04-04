@@ -83,6 +83,7 @@ function Party({ classes }) {
             className={classes.grow}
             variant='h6'
             color='inherit'
+            align='right'
             noWrap
           >
             code: 4DR2
