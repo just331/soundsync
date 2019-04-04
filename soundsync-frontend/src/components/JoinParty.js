@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Route, Redirect } from 'react-router-dom'
+import { Route } from 'react-router-dom'
 import Party from './Party'
 import TextField from '@material-ui/core/TextField'
 import Grid from '@material-ui/core/Grid'
 import SoundSyncButton from 'components/Button'
+import SoundSyncNavLink from 'components/NavLink'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = (theme) => {
@@ -46,10 +47,7 @@ function JoinParty({ classes }) {
   const handleJoinParty = (e) => {
     e.preventDefault()
     console.log('Joined Party!')
-    return <Redirect to='/Party' />
   }
-
-  const handleRedirect = (newLocation) => (e) => <Redirect to={newLocation} />
 
   return (
     <Grid
@@ -59,19 +57,15 @@ function JoinParty({ classes }) {
       spacing={24}
     >
       <Grid className={classes.ButtonContainer} item xs={12}>
-        <SoundSyncButton
-          onClick={handleRedirect('/')}
-          color='secondary'
-          variant='outlined'
-        >
-          Rejoin As Host
+        <SoundSyncButton color='secondary' variant='outlined'>
+          <SoundSyncNavLink color='secondary' to='/'>
+            Rejoin As Host
+          </SoundSyncNavLink>
         </SoundSyncButton>
-        <SoundSyncButton
-          onClick={handleRedirect('/CreateParty')}
-          color='primary'
-          variant='contained'
-        >
-          Create Party
+        <SoundSyncButton color='primary' variant='contained'>
+          <SoundSyncNavLink color='inherit' to='/CreateParty'>
+            Create Party
+          </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
       <Grid className={classes.Input} item xs={12}>
@@ -103,7 +97,9 @@ function JoinParty({ classes }) {
           className={classes.textField}
           onClick={handleJoinParty}
         >
-          Join Party
+          <SoundSyncNavLink color='inherit' to='/Party'>
+            Join Party
+          </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
     </Grid>
