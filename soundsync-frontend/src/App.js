@@ -1,8 +1,8 @@
 import React from 'react'
 import { Route, HashRouter } from 'react-router-dom'
-import CreateParty from './CreateParty'
-import JoinParty from './JoinParty'
-import Party from './Party'
+import CreateParty from 'components/CreateParty'
+import JoinParty from 'components/JoinParty'
+import Party from 'components/Party'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import { Grid } from '@material-ui/core/'
 
