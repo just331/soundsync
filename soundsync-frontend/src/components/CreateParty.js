@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
-import { TextField, Grid, Button } from '@material-ui/core/'
 import { withStyles } from '@material-ui/core/styles'
+import SoundSyncInput from 'components/Input'
+import SoundSyncButton from 'components/Button'
+import Grid from '@material-ui/core/Grid'
+import AppContainer from 'components/AppContainer'
+import Logo from 'components/Logo'
 
 const styles = (theme) => {
   return {
-    container: {
+    Container: {
       display: 'flex',
-      flexWrap: 'wrap',
-    },
-    textField: {
-      marginLeft: theme.spacing.unit,
-      marginRight: theme.spacing.unit,
-      width: 200,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '135px 0px',
     },
     dense: {
       marginTop: 19,
@@ -49,63 +50,59 @@ function CreateParty({ classes }) {
   }
 
   return (
-    <div>
-      <Grid item sm={6}>
-        <TextField
-          id='partyName'
-          label='Party Name'
-          required
-          className={classes.textField}
-          value={values.partyName}
-          onChange={handleChange('partyName')}
-        />
-      </Grid>
-      <Grid item sm={6}>
-        <TextField
-          id='phoneNumber'
-          label='Phone Number'
-          required
-          className={classes.textField}
-          value={values.phoneNumber}
-          onChange={handleChange('phoneNumber')}
-        />
-      </Grid>
-      {values.isVerifyCodeSent ? (
-        <div>
-          <Grid item sm={6}>
-            <TextField
-              id='verifyCode'
-              label='Enter Verification Code'
-              required
-              className={classes.textField}
-              value={values.verifyCode}
-              onChange={handleChange('verifyCode')}
-            />
-          </Grid>
-          <Grid item sm={6}>
-            <Button
-              variant='contained'
-              color='primary'
-              type='submit'
-              onClick={handleCreateParty}
-            >
-              Create Party
-            </Button>
-          </Grid>
-        </div>
-      ) : (
+    <AppContainer>
+      <Grid container className={classes.Container}>
+        <Logo />
         <Grid item sm={6}>
-          <Button
-            variant='contained'
-            color='primary'
-            type='submit'
-            onClick={handleSendVerify}
-          >
-            Send Verification Code
-          </Button>
+          <SoundSyncInput
+            id='partyName'
+            value={values.partyName}
+            placeholder='Enter Party Name'
+            onChange={handleChange('partyName')}
+          />
         </Grid>
-      )}
-    </div>
+        <Grid item sm={6}>
+          <SoundSyncInput
+            id='phoneNumber'
+            value={values.phoneNumber}
+            placeholder='Enter Phone Number'
+            onChange={handleChange('phoneNumber')}
+          />
+        </Grid>
+        {values.isVerifyCodeSent ? (
+          <>
+            <Grid item sm={6}>
+              <SoundSyncInput
+                id='verifyCode'
+                placeholder='Enter Verification Code'
+                value={values.verifyCode}
+                onChange={handleChange('verifyCode')}
+              />
+            </Grid>
+            <Grid item sm={6}>
+              <SoundSyncButton
+                variant='contained'
+                color='secondary'
+                onClick={handleCreateParty}
+              >
+                Create Party
+              </SoundSyncButton>
+            </Grid>
+          </>
+        ) : (
+          <Grid item sm={6}>
+            <SoundSyncButton
+              variant='contained'
+              color='secondary'
+              type='submit'
+              onClick={handleSendVerify}
+            >
+              Send Verification Code
+            </SoundSyncButton>
+          </Grid>
+        )}
+      </Grid>
+    </AppContainer>
   )
 }
 
