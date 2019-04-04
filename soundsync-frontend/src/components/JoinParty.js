@@ -1,27 +1,32 @@
 import React, { useState } from 'react'
-import { Route, NavLink } from 'react-router-dom'
+import { Route, Redirect } from 'react-router-dom'
 import Party from './Party'
 import TextField from '@material-ui/core/TextField'
 import Grid from '@material-ui/core/Grid'
-import Button from '@material-ui/core/Button'
+import SoundSyncButton from 'components/Button'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = (theme) => {
   return {
-    container: {
-      display: 'flex',
-      flexWrap: 'wrap',
-    },
     textField: {
-      marginLeft: theme.spacing.unit,
-      marginRight: theme.spacing.unit,
-      width: 200,
+      width: '86vw',
     },
-    dense: {
-      marginTop: 19,
+    ButtonContainer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
-    menu: {
-      width: 200,
+    Input: {
+      textAlign: 'center',
+    },
+    Container: {
+      margin: 'auto',
+      width: '100%',
+      backgroundImage: `linear-gradient(${theme.palette.secondary.main}, ${
+        theme.palette.primary.main
+      })`,
+      padding: '160px 0px',
+      height: '100vh',
     },
   }
 }
@@ -41,17 +46,35 @@ function JoinParty({ classes }) {
   const handleJoinParty = (e) => {
     e.preventDefault()
     console.log('Joined Party!')
+    return <Redirect to='/Party' />
   }
 
+  const handleRedirect = (newLocation) => (e) => <Redirect to={newLocation} />
+
   return (
-    <div>
-      <Button variant='contained' color='primary'>
-        <NavLink to='/CreateParty'>Create Party</NavLink>
-      </Button>
-      <Button variant='contained' color='primary'>
-        <NavLink to='/'>Join Party</NavLink>
-      </Button>
-      <Grid item sm={6}>
+    <Grid
+      className={classes.Container}
+      style={{ margin: 'auto', width: '100%' }}
+      container
+      spacing={24}
+    >
+      <Grid className={classes.ButtonContainer} item xs={12}>
+        <SoundSyncButton
+          onClick={handleRedirect('/')}
+          color='secondary'
+          variant='outlined'
+        >
+          Rejoin As Host
+        </SoundSyncButton>
+        <SoundSyncButton
+          onClick={handleRedirect('/CreateParty')}
+          color='primary'
+          variant='contained'
+        >
+          Create Party
+        </SoundSyncButton>
+      </Grid>
+      <Grid className={classes.Input} item xs={12}>
         <TextField
           id='partyCode'
           label='Party Code'
@@ -61,7 +84,7 @@ function JoinParty({ classes }) {
           onChange={handleChange('partyCode')}
         />
       </Grid>
-      <Grid item sm={6}>
+      <Grid className={classes.Input} item xs={12}>
         <TextField
           id='nickName'
           label='Nickname'
@@ -71,18 +94,19 @@ function JoinParty({ classes }) {
           onChange={handleChange('nickName')}
         />
       </Grid>
-      <Grid item sm={6}>
+      <Grid className={classes.Input} item xs={12}>
         <Route path='/Party' component={Party} />
-        <Button
+        <SoundSyncButton
           variant='contained'
-          color='primary'
+          color='secondary'
           type='submit'
+          className={classes.textField}
           onClick={handleJoinParty}
         >
-          <NavLink to='/Party'>Join Party</NavLink>
-        </Button>
+          Join Party
+        </SoundSyncButton>
       </Grid>
-    </div>
+    </Grid>
   )
 }
 
