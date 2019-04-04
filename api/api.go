@@ -12,6 +12,12 @@ import (
 	"net/http"
 )
 
+var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
+
+var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(":)")
+})
+
 // CreateParty returns the party code so the host can send it out to others
 var CreateParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)

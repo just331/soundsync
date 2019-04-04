@@ -46,9 +46,11 @@ func main() {
 	router := mux.NewRouter()
 
 	// API
-	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
-	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
-	router.Handle("/Callbackauth0", api.Callbackauth0).Methods("Get")
+	router.Handle("/", api.GetToken).Methods("GET")
+	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
+	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
+	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
+
 
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
