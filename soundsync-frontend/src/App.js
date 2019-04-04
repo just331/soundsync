@@ -7,6 +7,9 @@ import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import { Grid } from '@material-ui/core/'
 
 const theme = createMuiTheme({
+  typography: {
+    useNextVariants: true,
+  },
   spacing: {
     unit: 50,
   },
