@@ -1,16 +1,38 @@
 package api
 
 import (
-	"context"
 	_ "crypto/sha512"
 	"encoding/json"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/app"
 	"github.com/just331/soundsync/model"
-	"golang.org/x/oauth2"
 	"log"
 	"net/http"
+	"time"
 )
+
+var mySigingKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
+
+var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	/* Create Party token*/
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// Create a map to store our claims
+	claims := token.Claims.(jwt.MapClaims)
+
+	/* Set the token claims*/
+	claims["admin"] = true
+	claims["name"] = "Joshua Johnson"
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	/* Sign the token with our secret */
+	tokenString, _ := token.SignedString(mySigingKey)
+	fmt.Print("I signed a token senpai!")
+
+	/* Write the token to the browser window*/
+	w.Write([]byte(tokenString))
+})
 
 // CreateParty returns the party code so the host can send it out to others
 var CreateParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +61,7 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Party joined")
 })
 
-var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+/*var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	domain := "soundsync.auth0.com"
 
@@ -107,7 +129,7 @@ var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 	// Redirect to logged in page
 	http.Redirect(w, r, "/joinparty", http.StatusSeeOther)
 
-})
+})*/
 
 // func Verify(w http.ResponseWriter, r *http.Request) {
 // 	params := mux.Vars(r)

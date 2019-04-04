@@ -5,49 +5,36 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 
-	auth0 "github.com/auth0-community/go-auth0"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/just331/soundsync/api"
-	jose "gopkg.in/square/go-jose.v2"
+	"github.com/just331/soundsync/model"
 )
 
 var (
-	port          = "3005"
-	auth0Domain   = os.Getenv("AUTH0_DOMAIN")
-	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
-	auth0Secret   = os.Getenv("AUTH0_CLIENT_SECRET")
-	auth0Audience = os.Getenv("AUTH0_AUDIENCE")
+	port         = "3005"
+	mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
 )
 
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		secretProvider := auth0.NewKeyProvider(auth0Secret)
-		audience := []string{auth0Audience}
-
-		configuration := auth0.NewConfiguration(secretProvider, audience, "https://"+auth0Domain, jose.HS256)
-		validator := auth0.NewValidator(configuration, nil)
-
-		token, err := validator.ValidateRequest(r)
-
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("Token is not valid:", token)
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
-}
+var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
+})
 
 func main() {
 	router := mux.NewRouter()
+	model.CreateDatabaseClient()
 
 	// API
-	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", authMiddleware(api.CreateParty)).Methods("POST")
-	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", authMiddleware(api.JoinParty)).Methods("POST")
-	router.Handle("/Callbackauth0", api.Callbackauth0).Methods("Get")
+	router.Handle("/GetToken", api.GetToken).Methods("GET")
+	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
+	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
+
 	//TODO: Find out what this endpoint needs and returns
 	// router.HandleFunc("/LinkSpotify/").Methods("POST")
 	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
@@ -56,6 +43,17 @@ func main() {
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
 	// router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
-	fmt.Println("Listening on port: " + port)
+	go func() {
+		fmt.Println("Listening on port: " + port)
+		if err := http.ListenAndServe(":"+port, router); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	log.Println("Shutting down soundsync...")
+	os.Exit(0)
 }

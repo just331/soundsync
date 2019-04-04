@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	connectionStr = os.Getenv("connectionStr")
+	connectionStr = os.Getenv("MONGO_CONNECTION")
 	dbName        = "soundsync"
 	ctx, _        = context.WithTimeout(context.Background(), 10*time.Second)
 	client        *mongo.Client
@@ -24,8 +24,13 @@ var (
 	codeLength    = 6
 )
 
-func init() {
-	client, _ = mongo.NewClient(options.Client().ApplyURI(connectionStr))
+// CreateDatabaseClient initializes the database client
+func CreateDatabaseClient() {
+	client, err := mongo.NewClient(options.Client().ApplyURI(connectionStr))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	connErr := client.Connect(ctx)
 	db = client.Database(dbName)
 	fmt.Println("Connected to MongoDB")
@@ -34,16 +39,18 @@ func init() {
 		panic(connErr)
 	}
 
-	err := client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
+	perr := client.Ping(ctx, nil)
+	if perr != nil {
+		log.Fatal(perr)
 	}
 }
 
+// CreateUser adds a new user to the soundsync database's User collection
 func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 	var roles []string
 	roles = append(roles, role)
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	rand.Seed(time.Now().UnixNano())
 	const numberBytes = "0123456789"
@@ -67,10 +74,12 @@ func CreateUser(phoneNum, nickname, role string) (interface{}, error) {
 	return res.InsertedID, nil
 }
 
+// CreateParty adds a new party to the
 func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	var users []primitive.ObjectID
 	user := &User{}
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	// Generate random code
 	// TODO: Verify uniqueness
@@ -84,13 +93,13 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	err := db.Collection("User").FindOne(ctx, bson.M{"phoneNum": phoneNum}).Decode(user)
 	// We didn't find a user
 	if err != nil {
-		Id, err := CreateUser(phoneNum, nickname, "host")
+		ID, err := CreateUser(phoneNum, nickname, "host")
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Put the Id of the user in the users slice for the party
-		users = append(users, Id.(primitive.ObjectID))
+		users = append(users, ID.(primitive.ObjectID))
 	} else {
 		users = append(users, user.ID)
 	}
@@ -107,6 +116,7 @@ func CreateParty(partyName, phoneNum, nickname string) (string, error) {
 	return string(partyCode), nil
 }
 
+// JoinParty adds an existing user to an existing party
 func JoinParty(partyCode, nickname, phoneNum string) error {
 	party := &Party{}
 	user := &User{}
@@ -116,11 +126,11 @@ func JoinParty(partyCode, nickname, phoneNum string) error {
 
 	// We didn't find a user for that phone number
 	if err != nil {
-		Id, err := CreateUser(phoneNum, nickname, "attendee")
+		ID, err := CreateUser(phoneNum, nickname, "attendee")
 		if err != nil {
 			return err
 		}
-		party.Users = append(party.Users, Id.(primitive.ObjectID))
+		party.Users = append(party.Users, ID.(primitive.ObjectID))
 	} else {
 		party.Users = append(party.Users, user.ID)
 	}
