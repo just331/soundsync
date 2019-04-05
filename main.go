@@ -35,7 +35,7 @@ func main() {
 	//TODO: Find out what this endpoint needs and returns
 	router.HandleFunc("/LinkSpotify", api.LinkSpotify).Methods("GET")
 	router.HandleFunc("/callback", api.SpotifyCallback).Methods("GET")
-	router.HandleFunc("/MediaControls/Play", api.PlayPause).Methods("PUT")
+	router.HandleFunc("/MediaControls/Play", api.Play).Methods("PUT")
 	router.HandleFunc("/MediaControls/Pause", api.PlayPause).Methods("PUT")
 	router.HandleFunc("/MediaControls/Next", api.NextPrev).Methods("POST")
 	router.HandleFunc("/MediaControls/Previous", api.NextPrev).Methods("POST")

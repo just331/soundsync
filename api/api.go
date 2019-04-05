@@ -31,13 +31,14 @@ var (
 	// AuthCode Spotify authorization code for getting access tokens.  Returned from /authorize spotify endpoint
 	AuthCode = ""
 	// scopes restriction of spotify actions.  We only need read and modify current playback state and queue
-	scopes  = "user-read-playback-state user-modify-playback-state playlist-modify-public user-read-private"
+	scopes  = "user-read-playback-state user-modify-playback-state user-read-playback-state playlist-modify-public user-read-private"
 	sAcsTok spotAccessTokenResp
 	sTracks spotTrackSearchResponse
 	// partyName will be used for creating the playlist
 	partyName        = time.Now().Format("2006-01-02 3:4:5")
 	sCurrentUser     spotUser
 	sCurrentPlaylist spotPlaylist
+	sPlayerContext   string
 )
 
 var html = `
@@ -294,6 +295,49 @@ func refreshAccessToken() {
 	fmt.Println(sAcsTok.ExpiresIn)
 }
 
+// Play handles play media control
+func Play(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received Request: /MediaControls")
+	action := strings.TrimPrefix(r.URL.Path, "/MediaControls/")
+	fmt.Println("Action:", action)
+
+	var URL *url.URL
+	URL, err := url.Parse("https://api.spotify.com")
+	if err != nil {
+		panic(err)
+	}
+	URL.Path += "/v1/me/player/play"
+
+	client := &http.Client{}
+	req := &http.Request{}
+
+	if sPlayerContext != sCurrentPlaylist.PlaylistURI {
+		reqBody := map[string]interface{}{
+			"context_uri": sCurrentPlaylist.PlaylistURI,
+		}
+		bytesRepresentation, err := json.Marshal(reqBody)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		req, err = http.NewRequest("PUT", URL.String(), bytes.NewBuffer(bytesRepresentation))
+		sPlayerContext = sCurrentPlaylist.PlaylistURI
+	} else {
+		req, err = http.NewRequest("PUT", URL.String(), nil)
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+sAcsTok.AccessToken)
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 // PlayPause handels play and pause controls
 func PlayPause(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received Request: /MediaControls")
@@ -305,16 +349,9 @@ func PlayPause(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	URL.Path += "/v1/me/player"
+	URL.Path += "/v1/me/player/pause"
 
 	client := &http.Client{}
-
-	switch action {
-	case "Play":
-		URL.Path += "/play"
-	case "Pause":
-		URL.Path += "/pause"
-	}
 
 	req, err := http.NewRequest("PUT", URL.String(), nil)
 	req.Header.Set("Accept", "application/json")
@@ -441,6 +478,10 @@ func AddSong(w http.ResponseWriter, r *http.Request) {
 
 	reqBody := make(map[string][]string)
 	reqBody["uris"] = append(reqBody["uris"], trackURI)
+	reqBody["uris"] = append(reqBody["uris"], "spotify:track:3e9HZxeyfWwjeyPAMmWSSQ")
+	reqBody["uris"] = append(reqBody["uris"], "spotify:track:5uIRujGRZv5t4fGKkUTv4n")
+	reqBody["uris"] = append(reqBody["uris"], "spotify:track:6zWU7YALeEDMcPGhKKZJhV")
+	reqBody["uris"] = append(reqBody["uris"], "spotify:track:6XQHlsNu6so4PdglFkJQRJ")
 	bytesRepresentation, err := json.Marshal(reqBody)
 	if err != nil {
 		log.Fatalln(err)
