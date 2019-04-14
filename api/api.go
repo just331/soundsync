@@ -1,37 +1,21 @@
 package api
 
 import (
+	"context"
+	_ "crypto/sha512"
 	"encoding/json"
-	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/just331/soundsync/app"
+	"github.com/just331/soundsync/model"
+	"golang.org/x/oauth2"
 	"log"
 	"net/http"
-	"time"
-
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
-	"github.com/joshuaj1397/soundsync/model"
 )
 
 var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
 
 var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	/* Create the token */
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	// Create a map to store our claims
-	claims := token.Claims.(jwt.MapClaims)
-
-	/* Set token claims */
-	claims["admin"] = true
-	claims["name"] = "Joshua Johnson"
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
-	/* Sign the token with our secret */
-	tokenString, _ := token.SignedString(mySigningKey)
-	fmt.Println("I singed a token senpai!")
-
-	/* Finally, write the token to the browser window */
-	w.Write([]byte(tokenString))
+	fmt.Println(":)")
 })
 
 // CreateParty returns the party code so the host can send it out to others
@@ -59,6 +43,77 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	json.NewEncoder(w).Encode("Party joined")
+})
+
+var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	domain := "soundsync.auth0.com"
+
+	conf := &oauth2.Config{
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_CLIENT_SECRET",
+		RedirectURL:  "http://localhost:3005/callbackauth0",
+		Scopes:       []string{"openid", "profile"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://" + domain + "/authorize",
+			TokenURL: "https://" + domain + "/oauth/token",
+		},
+	}
+	state := r.URL.Query().Get("state")
+	session, err := app.Store.Get(r, "state")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if state != session.Values["state"] {
+		http.Error(w, "Invalid state parameter", http.StatusInternalServerError)
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+
+	token, err := conf.Exchange(context.TODO(), code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Getting now the userInfo
+	client := conf.Client(context.TODO(), token)
+	resp, err := client.Get("https://" + domain)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	var profile map[string]interface{}
+	if err = json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session, err = app.Store.Get(r, "auth-session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session.Values["id_token"] = token.Extra("id_token")
+	session.Values["access_token"] = token.AccessToken
+	session.Values["profile"] = profile
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect to logged in page
+	http.Redirect(w, r, "/joinparty", http.StatusSeeOther)
+
 })
 
 // func Verify(w http.ResponseWriter, r *http.Request) {
