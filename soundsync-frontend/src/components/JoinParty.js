@@ -2,43 +2,17 @@ import React, { useState } from 'react'
 import { Route } from 'react-router-dom'
 import Party from './Party'
 import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
 import SoundSyncButton from 'components/Button'
 import SoundSyncNavLink from 'components/NavLink'
+import SoundSyncInput from 'components/Input'
+import AppContainer from 'components/AppContainer'
 import { withStyles } from '@material-ui/core/styles'
-import Logo from 'assets/logo.png'
+import Logo from 'components/Logo'
 
 const styles = (theme) => {
   return {
-    LogoText: {
-      color: 'white',
-    },
-    ImageContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'column',
-    },
-    Image: {
-      width: '45vw',
-    },
     ButtonField: {
       width: '300px',
-    },
-    textField: {
-      placeholder: 'name',
-      color: '#333333',
-      height: '1vh',
-      backgroundColor: 'white',
-      borderRadius: '50px',
-      boxShadow: 'none',
-      border: '2px solid white',
-      padding: '20px',
-      margin: '10px 0px',
-      width: '300px',
-      '&::placeholder': {
-        color: '#666666',
-      },
     },
     ButtonContainer: {
       display: 'flex',
@@ -47,14 +21,6 @@ const styles = (theme) => {
     },
     Input: {
       textAlign: 'center',
-    },
-    Container: {
-      margin: 'auto',
-      width: '100%',
-      backgroundImage: `linear-gradient(${theme.palette.secondary.main}, ${
-        theme.palette.primary.main
-      })`,
-      height: '100vh',
     },
   }
 }
@@ -77,12 +43,7 @@ function JoinParty({ classes }) {
   }
 
   return (
-    <Grid
-      className={classes.Container}
-      style={{ margin: 'auto', width: '100%' }}
-      container
-      spacing={24}
-    >
+    <AppContainer>
       <Grid className={classes.ButtonContainer} item xs={12}>
         <SoundSyncButton color='secondary' variant='outlined'>
           <SoundSyncNavLink color='secondary' to='/'>
@@ -95,24 +56,17 @@ function JoinParty({ classes }) {
           </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
-      <Grid className={classes.ImageContainer} item xs={12}>
-        <img className={classes.Image} src={Logo} alt='logo' />
-        <Typography className={classes.LogoText} variant='h4' gutterBottom>
-          soundsync
-        </Typography>
-      </Grid>
+      <Logo />
       <Grid className={classes.Input} item xs={12}>
-        <input
+        <SoundSyncInput
           id='partyCode'
           placeholder='Party Code'
-          className={classes.textField}
           value={values.partyCode}
           onChange={handleChange('partyCode')}
         />
-        <input
+        <SoundSyncInput
           id='nickName'
           placeholder='Nickname'
-          className={classes.textField}
           value={values.nickName}
           onChange={handleChange('nickName')}
         />
@@ -133,7 +87,7 @@ function JoinParty({ classes }) {
           </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
-    </Grid>
+    </AppContainer>
   )
 }
 

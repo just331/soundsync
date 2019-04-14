@@ -1,13 +1,15 @@
 package api
 
 import (
+	"context"
+	_ "crypto/sha512"
 	"encoding/json"
-	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/just331/soundsync/app"
+	"github.com/just331/soundsync/model"
+	"golang.org/x/oauth2"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
-	"github.com/joshuaj1397/soundsync/model"
 )
 
 var mySigningKey = []byte("ASuperSecretSigningKeyCreatedByTheAliensFromArrival")
@@ -41,6 +43,77 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	json.NewEncoder(w).Encode("Party joined")
+})
+
+var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	domain := "soundsync.auth0.com"
+
+	conf := &oauth2.Config{
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_CLIENT_SECRET",
+		RedirectURL:  "http://localhost:3005/callbackauth0",
+		Scopes:       []string{"openid", "profile"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://" + domain + "/authorize",
+			TokenURL: "https://" + domain + "/oauth/token",
+		},
+	}
+	state := r.URL.Query().Get("state")
+	session, err := app.Store.Get(r, "state")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if state != session.Values["state"] {
+		http.Error(w, "Invalid state parameter", http.StatusInternalServerError)
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+
+	token, err := conf.Exchange(context.TODO(), code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Getting now the userInfo
+	client := conf.Client(context.TODO(), token)
+	resp, err := client.Get("https://" + domain)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	var profile map[string]interface{}
+	if err = json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session, err = app.Store.Get(r, "auth-session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session.Values["id_token"] = token.Extra("id_token")
+	session.Values["access_token"] = token.AccessToken
+	session.Values["profile"] = profile
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect to logged in page
+	http.Redirect(w, r, "/joinparty", http.StatusSeeOther)
+
 })
 
 // func Verify(w http.ResponseWriter, r *http.Request) {
