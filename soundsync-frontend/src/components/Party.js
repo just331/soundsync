@@ -1,5 +1,10 @@
 import React, { useState } from 'react'
-import Logo from 'assets/logo.png'
+import Logo from 'components/Logo'
+import IntegrationNotistack from './Snackbar'
+
+import SoundSyncButton from 'components/Button'
+import SoundSyncNavLink from 'components/NavLink'
+
 import MusicControl from './MusicControl'
 import {
   Button,
@@ -9,6 +14,7 @@ import {
   AppBar,
 } from '@material-ui/core'
 import MenuIcon from '@material-ui/icons/Menu'
+import NotificationsIcon from '@material-ui/icons/Notifications'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = (theme) => {
@@ -69,49 +75,62 @@ function Party({ classes }) {
 
   return (
     <div className={classes.root}>
-      <AppBar position='static'>
+      <AppBar position='static' color='#F2F3F5'>
         <Toolbar>
+          <Typography variant='h6' align='left'>
+            Home
+          </Typography>
           <Typography
             className={classes.grow}
             variant='h6'
-            color='inherit'
+            color='#262626'
+            align='center'
             noWrap
           >
             soundsync
           </Typography>
           <Typography
             className={classes.grow}
-            variant='h6'
-            color='inherit'
+            color='#262626'
             align='right'
             noWrap
           >
-            code: 4DR2
+            <b>CODE: 4DR2</b>
           </Typography>
         </Toolbar>
       </AppBar>
-      <AppBar position='static'>
+      <AppBar position='static' color='#000000'>
         <Toolbar>
           <IconButton>
-            <MenuIcon />
+            <NotificationsIcon />
           </IconButton>
           <Typography
             className={classes.grow}
             variant='h6'
             color='inherit'
             noWrap
+            align='center'
           >
             queue
           </Typography>
-          <Button
+          <SoundSyncButton
             variant='contained'
-            color='primary'
+            color='secondary'
+            type='submit'
+            className={classes.textField}
             onClick={handleLinkSpotify}
           >
-            Link Spotify
-          </Button>
+            <SoundSyncNavLink
+              color='inherit'
+              to='/Party'
+              className={classes.ButtonField}
+            >
+              LINK SPOTIFY
+            </SoundSyncNavLink>
+          </SoundSyncButton>
         </Toolbar>
       </AppBar>
+      <IntegrationNotistack />
       <MusicControl className={classes.musicControl} />
     </div>
   )

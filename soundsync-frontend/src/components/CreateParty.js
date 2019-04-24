@@ -5,6 +5,7 @@ import SoundSyncButton from 'components/Button'
 import Grid from '@material-ui/core/Grid'
 import AppContainer from 'components/AppContainer'
 import Logo from 'components/Logo'
+import IntegrationNotistack from './Snackbar'
 
 const styles = (theme) => {
   return {
@@ -51,6 +52,7 @@ function CreateParty({ classes }) {
 
   return (
     <AppContainer>
+      <IntegrationNotistack />
       <Grid container className={classes.Container}>
         <Logo />
         <Grid item sm={6}>
