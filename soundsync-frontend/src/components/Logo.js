@@ -7,15 +7,33 @@ import { withStyles } from '@material-ui/core/styles'
 const styles = (theme) => ({
   LogoText: {
     color: 'white',
+    fontSize: '5.6vw',
+    marginBottom: 0,
+    typography: {
+      fontFamily: [
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"Segoe UI"',
+        'Roboto',
+        '"Helvetica"',
+        'Arial',
+        'sans-serif',
+        '"Apple Color Emoji"',
+        '"Segoe UI Emoji"',
+        '"Segoe UI Symbol"',
+      ].join(','),
+    }
   },
   ImageContainer: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
+    padding: '0 !important',
   },
   Image: {
-    width: '45vw',
+    width: '65%',
+    maxWidth: 500,
   },
 })
 

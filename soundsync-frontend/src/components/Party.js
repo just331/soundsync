@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Logo from 'assets/logo.png'
+import Logo from '../assets/logo.png'
 import MusicControl from './MusicControl'
 import {
   Button,
@@ -10,11 +10,23 @@ import {
 } from '@material-ui/core'
 import MenuIcon from '@material-ui/icons/Menu'
 import { withStyles } from '@material-ui/core/styles'
+import Playlist from './Playlist';
 
 const styles = (theme) => {
   return {
     root: {
       flexGrow: 1,
+      Typography: {
+        fontFamily: [
+        'Trebuchet MS',
+        '"Helvetica"',
+        'Arial',
+        'sans-serif',
+        ]
+      },
+      button: {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      }
     },
     grow: {
       flexGrow: 1,
@@ -39,17 +51,25 @@ const styles = (theme) => {
     },
     logo: {
       alignSelf: 'flex-start',
+      width: 20,
+      paddingRight: 6
     },
     code: {
       alignSelf: 'flex-end',
     },
     appBar: {
       top: 0,
+      opacity: 0.5
     },
     musicControl: {
       bottom: 0,
       position: 'fixed',
     },
+    AppBar: {
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      color: 'black',
+      position: 'static',
+    } 
   }
 }
 
@@ -69,7 +89,7 @@ function Party({ classes }) {
 
   return (
     <div className={classes.root}>
-      <AppBar position='static'>
+      <AppBar className={classes.AppBar}>
         <Toolbar>
           <Typography
             className={classes.grow}
@@ -77,12 +97,11 @@ function Party({ classes }) {
             color='inherit'
             noWrap
           >
-            soundsync
+          <img className={classes.logo} src={Logo}/>
+          soundsync
           </Typography>
           <Typography
             className={classes.grow}
-            variant='h6'
-            color='inherit'
             align='right'
             noWrap
           >
@@ -90,7 +109,7 @@ function Party({ classes }) {
           </Typography>
         </Toolbar>
       </AppBar>
-      <AppBar position='static'>
+      <AppBar className={classes.AppBar}>
         <Toolbar>
           <IconButton>
             <MenuIcon />
@@ -112,6 +131,7 @@ function Party({ classes }) {
           </Button>
         </Toolbar>
       </AppBar>
+      <Playlist />
       <MusicControl className={classes.musicControl} />
     </div>
   )

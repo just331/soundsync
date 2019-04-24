@@ -12,7 +12,8 @@ import Logo from 'components/Logo'
 const styles = (theme) => {
   return {
     ButtonField: {
-      width: '300px',
+      width: 160,
+      maxWidth: 500,
     },
     ButtonContainer: {
       display: 'flex',
@@ -21,6 +22,7 @@ const styles = (theme) => {
     },
     Input: {
       textAlign: 'center',
+      padding: '0 !important',
     },
   }
 }
@@ -56,7 +58,7 @@ function JoinParty({ classes }) {
           </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
-      <Logo />
+      <Logo className={classes.Logo}/>
       <Grid className={classes.Input} item xs={12}>
         <SoundSyncInput
           id='partyCode'
