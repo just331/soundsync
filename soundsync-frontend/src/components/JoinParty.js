@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Route } from 'react-router-dom'
+import { Route, withRouter } from 'react-router-dom'
 import Party from './Party'
 import Grid from '@material-ui/core/Grid'
 import SoundSyncButton from 'components/Button'
@@ -8,6 +8,7 @@ import SoundSyncInput from 'components/Input'
 import AppContainer from 'components/AppContainer'
 import { withStyles } from '@material-ui/core/styles'
 import Logo from 'components/Logo'
+import auth0Client from '../auth/Auth.js'
 
 const styles = (theme) => {
   return {
@@ -39,7 +40,31 @@ function JoinParty({ classes }) {
   // TODO: Check to see if they have a valid jwt token first (means they are logged in)
   const handleJoinParty = (e) => {
     e.preventDefault()
-    console.log('Joined Party!')
+    if (auth0Client.isAuthenticated()) {
+      fetch(
+        'https://localhost:3005/JoinParty/' +
+          values.nickName +
+          '/' +
+          values.partyCode +
+          '/' +
+          values.phoneNum,
+      )
+        .then((res) => res.json())
+        .then(
+          (result) => {
+            if (result === 'Party Joined') {
+              console.log('API: Joined Party')
+            } else {
+              console.log('API: Join Party failed')
+            }
+          },
+          (error) => {
+            console.log(error)
+          },
+        )
+    } else {
+      console.log('No Auth')
+    }
   }
 
   return (
@@ -70,6 +95,12 @@ function JoinParty({ classes }) {
           value={values.nickName}
           onChange={handleChange('nickName')}
         />
+        <SoundSyncInput
+          id='phoneNum'
+          placeholder='Phone Number'
+          value={values.phoneNum}
+          onChange={handleChange('phoneNum')}
+        />
         <Route path='/Party' component={Party} />
         <SoundSyncButton
           variant='contained'
@@ -91,4 +122,4 @@ function JoinParty({ classes }) {
   )
 }
 
-export default withStyles(styles)(JoinParty)
+export default withRouter(withStyles(styles)(JoinParty))

@@ -1,10 +1,11 @@
 import React from 'react'
 import './index.css'
-import { Route, HashRouter } from 'react-router-dom'
+import { Route } from 'react-router-dom'
 import CreateParty from 'components/CreateParty'
 import JoinParty from 'components/JoinParty'
 import Party from 'components/Party'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import auth0Client from 'auth/Auth.js'
 
 const theme = createMuiTheme({
   typography: {
@@ -20,14 +21,17 @@ const theme = createMuiTheme({
   },
 })
 
-function App() {
+function App(props) {
+  const signOut = () => {
+    auth0Client.signOut()
+    props.history.replace('/')
+  }
+
   return (
     <MuiThemeProvider theme={theme}>
-      <HashRouter>
-        <Route exact path='/' component={JoinParty} />
-        <Route path='/CreateParty' component={CreateParty} />
-        <Route path='/Party' component={Party} />
-      </HashRouter>
+      <Route exact path='/' component={JoinParty} />
+      <Route path='/CreateParty' component={CreateParty} />
+      <Route path='/Party' component={Party} />
     </MuiThemeProvider>
   )
 }
