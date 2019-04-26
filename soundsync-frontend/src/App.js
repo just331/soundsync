@@ -1,62 +1,35 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
+import React from 'react'
+import './index.css'
+import { Route, HashRouter } from 'react-router-dom'
+import CreateParty from 'components/CreateParty'
+import JoinParty from 'components/JoinParty'
+import Party from 'components/Party'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 
-const styles = theme => ({
-  root: {
-    flexGrow: 1,
+const theme = createMuiTheme({
+  typography: {
+    useNextVariants: true,
   },
-  paper: {
-    padding: theme.spacing.unit * 2,
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
+  palette: {
+    primary: {
+      main: '#B432E6',
+    },
+    secondary: {
+      main: '#3CBEAF',
+    },
   },
-});
+})
 
-function CenteredGrid(props) {
-  const { classes } = props;
-
+function App() {
   return (
-    <div className={classes.root}>
-      <Grid container spacing={24}>
-        <Grid item xs={12}>
-          <Paper className={classes.paper}>xs=12</Paper>
-        </Grid>
-        <Grid item xs={6}>
-          <Paper className={classes.paper}>xs=6</Paper>
-        </Grid>
-        <Grid item xs={6}>
-          <Paper className={classes.paper}>xs=6</Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className={classes.paper}>xs=3</Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className={classes.paper}>xs=3</Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className={classes.paper}>xs=3</Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className={classes.paper}>xs=3</Paper>
-        </Grid>
-      </Grid>
-    </div>
-  );
+    <MuiThemeProvider theme={theme}>
+      <HashRouter>
+        <Route exact path='/' component={JoinParty} />
+        <Route path='/CreateParty' component={CreateParty} />
+        <Route path='/Party' component={Party} />
+      </HashRouter>
+    </MuiThemeProvider>
+  )
 }
 
-CenteredGrid.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
-
-class App extends Component {
-  render() {
-    return (
-      <CenteredGrid />
-    );
-  }
-}
-
-export default App;
+export default App
