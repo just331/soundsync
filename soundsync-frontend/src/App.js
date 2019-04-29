@@ -4,8 +4,9 @@ import { Route } from 'react-router-dom'
 import CreateParty from 'components/CreateParty'
 import JoinParty from 'components/JoinParty'
 import Party from 'components/Party'
+import Callback from 'components/Callback'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import auth0Client from 'auth/Auth.js'
+import Auth from 'auth/Auth.js'
 
 const theme = createMuiTheme({
   typography: {
@@ -21,19 +22,58 @@ const theme = createMuiTheme({
   },
 })
 
-function App(props) {
-  const signOut = () => {
-    auth0Client.signOut()
-    props.history.replace('/')
+const handleAuthentication = (nextState, replace) => {
+  if (/access_token|id_token|error/.test(nextState.location.hash)) {
+    auth.handleAuthentication()
+  }
+}
+
+class App extends React.Component {
+  constructor(props) {
+    super(props)
   }
 
-  return (
-    <MuiThemeProvider theme={theme}>
-      <Route exact path='/' component={JoinParty} />
-      <Route path='/CreateParty' component={CreateParty} />
-      <Route path='/Party' component={Party} />
+  login() {
+    this.props.auth.login()
+  }
+
+  logout() {
+    this.props.auth.logout()
+    this.props.history.replace('/')
+  }
+
+  componentDidMount() {
+    const { renewSession } = this.props.auth
+
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      renewSession()
+    }
+  }
+
+  render() {
+    ;<MuiThemeProvider theme={theme}>
+      <Route
+        exact
+        path='/'
+        render={(props) => <JoinParty auth={auth} {...props} />}
+      />
+      <Route
+        path='/CreateParty'
+        render={(props) => <CreateParty auth={auth} {...props} />}
+      />
+      <Route
+        path='/Party/:partyId'
+        render={(props) => <Party auth={auth} {...props} />}
+      />
+      <Route
+        path='/Callback'
+        render={(props) => {
+          handleAuthentication(props)
+          return <Callback {...props} />
+        }}
+      />
     </MuiThemeProvider>
-  )
+  }
 }
 
 export default App

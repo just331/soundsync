@@ -119,7 +119,7 @@ var JoinParty = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.NewEncoder(w).Encode("Party joined")
+	json.NewEncoder(w).Encode("Party Joined")
 })
 
 var Callbackauth0 = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -249,6 +249,7 @@ func LinkSpotify(w http.ResponseWriter, r *http.Request) {
 	log.Println(string(body))
 	log.Println()
 	log.Println()
+	w.Write(body)
 }
 
 // SpotifyCallback Redirected here after authorization to receive authCode

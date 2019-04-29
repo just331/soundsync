@@ -40,31 +40,6 @@ function JoinParty({ classes }) {
   // TODO: Check to see if they have a valid jwt token first (means they are logged in)
   const handleJoinParty = (e) => {
     e.preventDefault()
-    if (auth0Client.isAuthenticated()) {
-      fetch(
-        'https://localhost:3005/JoinParty/' +
-          values.nickName +
-          '/' +
-          values.partyCode +
-          '/' +
-          values.phoneNum,
-      )
-        .then((res) => res.json())
-        .then(
-          (result) => {
-            if (result === 'Party Joined') {
-              console.log('API: Joined Party')
-            } else {
-              console.log('API: Join Party failed')
-            }
-          },
-          (error) => {
-            console.log(error)
-          },
-        )
-    } else {
-      console.log('No Auth')
-    }
   }
 
   return (
