@@ -8,6 +8,8 @@ import Callback from 'components/Callback'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import Auth from 'auth/Auth.js'
 
+const auth = new Auth()
+
 const theme = createMuiTheme({
   typography: {
     useNextVariants: true,
@@ -39,7 +41,6 @@ class App extends React.Component {
 
   logout() {
     this.props.auth.logout()
-    this.props.history.replace('/')
   }
 
   componentDidMount() {
@@ -51,28 +52,30 @@ class App extends React.Component {
   }
 
   render() {
-    ;<MuiThemeProvider theme={theme}>
-      <Route
-        exact
-        path='/'
-        render={(props) => <JoinParty auth={auth} {...props} />}
-      />
-      <Route
-        path='/CreateParty'
-        render={(props) => <CreateParty auth={auth} {...props} />}
-      />
-      <Route
-        path='/Party/:partyId'
-        render={(props) => <Party auth={auth} {...props} />}
-      />
-      <Route
-        path='/Callback'
-        render={(props) => {
-          handleAuthentication(props)
-          return <Callback {...props} />
-        }}
-      />
-    </MuiThemeProvider>
+    return (
+      <MuiThemeProvider theme={theme}>
+        <Route
+          exact
+          path='/'
+          render={(props) => <JoinParty auth={auth} {...props} />}
+        />
+        <Route
+          path='/CreateParty'
+          render={(props) => <CreateParty auth={auth} {...props} />}
+        />
+        <Route
+          path='/Party/:partyId'
+          render={(props) => <Party auth={auth} {...props} />}
+        />
+        <Route
+          path='/Callback'
+          render={(props) => {
+            handleAuthentication(props)
+            return <Callback {...props} />
+          }}
+        />
+      </MuiThemeProvider>
+    )
   }
 }
 

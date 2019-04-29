@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import loading from '../assets/loading.svg'
+import { createMuiTheme } from '@material-ui/core/styles'
 
 const theme = createMuiTheme({
   typography: {
