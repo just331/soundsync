@@ -59,7 +59,7 @@ const styles = (theme) => {
   }
 }
 
-function Party({ classes }) {
+function Party({ classes }, props) {
   const [values, setValues] = useState({
     isSpotifyLinked: false,
   })

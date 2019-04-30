@@ -5,14 +5,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	auth0 "github.com/auth0-community/go-auth0"
 	"github.com/gorilla/mux"
-	"github.com/just331/soundsync/api"
+	"github.com/joshuaj1397/soundsync/api"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
 var (
-
 	port          = "3005"
 	auth0Domain   = os.Getenv("AUTH0_DOMAIN")
 	auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
@@ -41,24 +41,28 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-
 func main() {
 	router := mux.NewRouter()
 
 	// API
 	router.Handle("/", api.GetToken).Methods("GET")
-	router.Handle("/CreateParty/{nickname}/{phoneNum}/{partyName}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
+	router.Handle("/CreateParty/{nickname}/{partyName}/{phoneNum}", jwtMiddleware.Handler(api.CreateParty)).Methods("POST")
 	router.Handle("/JoinParty/{nickname}/{partyCode}/{phoneNum}", jwtMiddleware.Handler(api.JoinParty)).Methods("POST")
 	// router.HandleFunc("/Verify/{phoneNum}/{name}/{authCode}", api.Verify).Methods("POST")
 
-
 	//TODO: Find out what this endpoint needs and returns
-	// router.HandleFunc("/LinkSpotify/").Methods("POST")
-	// router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
-	// router.HandleFunc("/AddSong/{songId}/{partyId}", api.AddSong).Methods("POST")
-	// router.HandleFunc("/SongQueue/{partyId}", api.SongQueue).Methods("GET")
+	router.HandleFunc("/LinkSpotify", api.LinkSpotify).Methods("GET")
+	router.HandleFunc("/callback", api.SpotifyCallback).Methods("GET")
+	router.HandleFunc("/MediaControls/Play", api.Play).Methods("PUT")
+	router.HandleFunc("/MediaControls/Pause", api.PlayPause).Methods("PUT")
+	router.HandleFunc("/MediaControls/Next", api.NextPrev).Methods("POST")
+	router.HandleFunc("/MediaControls/Previous", api.NextPrev).Methods("POST")
+	router.HandleFunc("/SearchSpotify/{query}", api.SearchSpotify).Methods("GET")
+	router.HandleFunc("/AddSong/{songURI}", api.AddSong).Methods("POST")
+	// router.HandleFunc("/SongQueue", api.SongQueue).Methods("GET")
+	// router.HandleFunc("/CurrentSong", api.MediaControls).Methods("GET")
 	// router.HandleFunc("/SkipSong/{songId}/{partyId}", api.SkipSong).Methods("POST")
-	// router.HandleFunc("/RemoveSong/{songId}/{partyId}", api.RemoveSong).Methods("POST")
+	// router.HandleFunc("/RemoveSong/{songId}/{partyI 	d}", api.RemoveSong).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":"+port, router))
 	fmt.Println("Listening on port: " + port)
