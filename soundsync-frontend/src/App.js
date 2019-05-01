@@ -1,11 +1,14 @@
 import React from 'react'
 import './index.css'
-import { Route, HashRouter } from 'react-router-dom'
+import { Route } from 'react-router-dom'
 import CreateParty from 'components/CreateParty'
 import JoinParty from 'components/JoinParty'
 import Party from 'components/Party'
+import Callback from 'components/Callback'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import Auth from './auth/Auth.js'
+import Auth from 'auth/Auth.js'
+
+const auth = new Auth()
 
 const theme = createMuiTheme({
   typography: {
@@ -21,19 +24,58 @@ const theme = createMuiTheme({
   },
 })
 
-function App() {
-  const auth = new Auth()
-  auth.login()
+const handleAuthentication = (nextState, replace) => {
+  if (/access_token|id_token|error/.test(nextState.location.hash)) {
+    auth.handleAuthentication()
+  }
+}
 
-  return (
-    <MuiThemeProvider theme={theme}>
-      <HashRouter>
-        <Route exact path='/' component={JoinParty} />
-        <Route path='/CreateParty' component={CreateParty} />
-        <Route path='/Party' component={Party} />
-      </HashRouter>
-    </MuiThemeProvider>
-  )
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  login() {
+    this.props.auth.login()
+  }
+
+  logout() {
+    this.props.auth.logout()
+  }
+
+  componentDidMount() {
+    // const { renewSession } = this.props.auth
+    // if (localStorage.getItem('isLoggedIn') === 'true') {
+    //   renewSession()
+    // }
+  }
+
+  render() {
+    return (
+      <MuiThemeProvider theme={theme}>
+        <Route
+          exact
+          path='/'
+          render={(props) => <JoinParty auth={auth} {...props} />}
+        />
+        <Route
+          path='/CreateParty'
+          render={(props) => <CreateParty auth={auth} {...props} />}
+        />
+        <Route
+          path='/Party/:partyId'
+          render={(props) => <Party auth={auth} {...props} />}
+        />
+        <Route
+          path='/Callback'
+          render={(props) => {
+            handleAuthentication(props)
+            return <Callback {...props} />
+          }}
+        />
+      </MuiThemeProvider>
+    )
+  }
 }
 
 export default App
