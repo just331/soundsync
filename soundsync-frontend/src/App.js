@@ -5,6 +5,7 @@ import CreateParty from 'components/CreateParty'
 import JoinParty from 'components/JoinParty'
 import Party from 'components/Party'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import Auth from './auth/Auth.js'
 
 const theme = createMuiTheme({
   typography: {
@@ -21,6 +22,9 @@ const theme = createMuiTheme({
 })
 
 function App() {
+  const auth = new Auth()
+  auth.login()
+
   return (
     <MuiThemeProvider theme={theme}>
       <HashRouter>
