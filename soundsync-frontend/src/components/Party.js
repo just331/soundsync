@@ -5,6 +5,7 @@ import IntegrationNotistack from './Snackbar'
 import SoundSyncButton from 'components/Button'
 import SoundSyncNavLink from 'components/NavLink'
 
+import Logo from '../assets/logo.png'
 import MusicControl from './MusicControl'
 import {
   Button,
@@ -16,11 +17,18 @@ import {
 import MenuIcon from '@material-ui/icons/Menu'
 import NotificationsIcon from '@material-ui/icons/Notifications'
 import { withStyles } from '@material-ui/core/styles'
+import Playlist from './Playlist'
 
 const styles = (theme) => {
   return {
     root: {
       flexGrow: 1,
+      Typography: {
+        fontFamily: ['Trebuchet MS', '"Helvetica"', 'Arial', 'sans-serif'],
+      },
+      button: {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      },
     },
     grow: {
       flexGrow: 1,
@@ -45,16 +53,24 @@ const styles = (theme) => {
     },
     logo: {
       alignSelf: 'flex-start',
+      width: 20,
+      paddingRight: 6,
     },
     code: {
       alignSelf: 'flex-end',
     },
     appBar: {
       top: 0,
+      opacity: 0.5,
     },
     musicControl: {
       bottom: 0,
       position: 'fixed',
+    },
+    AppBar: {
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      color: 'black',
+      position: 'static',
     },
   }
 }
@@ -75,7 +91,7 @@ function Party({ classes }, props) {
 
   return (
     <div className={classes.root}>
-      <AppBar position='static' color='#F2F3F5'>
+      <AppBar className={classes.AppBar}>
         <Toolbar>
           <Typography variant='h6' align='left'>
             Home
@@ -87,19 +103,15 @@ function Party({ classes }, props) {
             align='center'
             noWrap
           >
+            <img className={classes.logo} src={Logo} />
             soundsync
           </Typography>
-          <Typography
-            className={classes.grow}
-            color='#262626'
-            align='right'
-            noWrap
-          >
+          <Typography className={classes.grow} align='right' noWrap>
             <b>CODE: 4DR2</b>
           </Typography>
         </Toolbar>
       </AppBar>
-      <AppBar position='static' color='#000000'>
+      <AppBar className={classes.AppBar}>
         <Toolbar>
           <IconButton>
             <NotificationsIcon />
@@ -131,6 +143,7 @@ function Party({ classes }, props) {
         </Toolbar>
       </AppBar>
       <IntegrationNotistack />
+      <Playlist />
       <MusicControl className={classes.musicControl} />
     </div>
   )
