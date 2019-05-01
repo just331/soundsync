@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import Logo from 'components/Logo'
 import IntegrationNotistack from './Snackbar'
 
 import SoundSyncButton from 'components/Button'
