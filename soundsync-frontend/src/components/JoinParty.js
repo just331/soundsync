@@ -13,7 +13,8 @@ import auth0Client from '../auth/Auth.js'
 const styles = (theme) => {
   return {
     ButtonField: {
-      width: '300px',
+      width: 160,
+      maxWidth: 500,
     },
     ButtonContainer: {
       display: 'flex',
@@ -22,6 +23,7 @@ const styles = (theme) => {
     },
     Input: {
       textAlign: 'center',
+      padding: '0 !important',
     },
   }
 }
@@ -56,7 +58,7 @@ function JoinParty({ classes }) {
           </SoundSyncNavLink>
         </SoundSyncButton>
       </Grid>
-      <Logo />
+      <Logo className={classes.Logo} />
       <Grid className={classes.Input} item xs={12}>
         <SoundSyncInput
           id='partyCode'
@@ -76,7 +78,7 @@ function JoinParty({ classes }) {
           value={values.phoneNum}
           onChange={handleChange('phoneNum')}
         />
-        <Route path='/Party' component={Party} />
+        <Route path='/Party/4DR2' component={Party} />
         <SoundSyncButton
           variant='contained'
           color='secondary'
@@ -86,7 +88,7 @@ function JoinParty({ classes }) {
         >
           <SoundSyncNavLink
             color='inherit'
-            to='/Party'
+            to='/Party/4DR2'
             className={classes.ButtonField}
           >
             Join Party

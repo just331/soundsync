@@ -44,11 +44,10 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    const { renewSession } = this.props.auth
-
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-      renewSession()
-    }
+    // const { renewSession } = this.props.auth
+    // if (localStorage.getItem('isLoggedIn') === 'true') {
+    //   renewSession()
+    // }
   }
 
   render() {
