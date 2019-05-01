@@ -11,6 +11,7 @@ const SoundSyncAPI = {
           return result
         },
         (error) => {
+          return error
           console.log(error)
         },
       )
@@ -22,12 +23,14 @@ const SoundSyncAPI = {
       .then(
         (result) => {
           if (result === 'Party Joined') {
+            return result
             console.log('API: Joined Party')
           } else {
             console.log('API: Join Party failed')
           }
         },
         (error) => {
+          return error
           console.log(error)
         },
       )
