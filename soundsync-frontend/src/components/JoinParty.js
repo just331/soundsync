@@ -78,7 +78,7 @@ function JoinParty({ classes }) {
           value={values.phoneNum}
           onChange={handleChange('phoneNum')}
         />
-        <Route path='/Party' component={Party} />
+        <Route path='/Party/4DR2' component={Party} />
         <SoundSyncButton
           variant='contained'
           color='secondary'
@@ -88,7 +88,7 @@ function JoinParty({ classes }) {
         >
           <SoundSyncNavLink
             color='inherit'
-            to='/Party'
+            to='/Party/4DR2'
             className={classes.ButtonField}
           >
             Join Party

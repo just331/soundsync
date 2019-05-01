@@ -2,8 +2,8 @@ import auth0 from 'auth0-js'
 
 export default class Auth {
   auth0 = new auth0.WebAuth({
-    domain: process.env.AUTH0_DOMAIN,
-    clientID: process.env.AUTH0_CLIENT_ID,
+    domain: 'soundsync.auth0.com',
+    clientID: 'jb55aT2S42DdGusFvx5tB6rIZGgrZ6fv',
     redirectUri: 'http://localhost:3000/callback',
     responseType: 'token id_token',
     scope: 'openid',
@@ -20,7 +20,7 @@ export default class Auth {
     this.isAuthenticated = this.isAuthenticated.bind(this)
     this.getAccessToken = this.getAccessToken.bind(this)
     this.getIdToken = this.getIdToken.bind(this)
-    this.renewSession = this.renewSession.bind(this)
+    //this.renewSession = this.renewSession.bind(this)
   }
 
   handleAuthentication() {

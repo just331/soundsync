@@ -1,51 +1,43 @@
-import React from 'react'
-import AddSong from './AddSong'
+import React, { useState } from 'react'
+import { withStyles } from '@material-ui/core/styles'
 
-export default class App extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      songs: {
-        'fruit-1': 'orange',
-        'fruit-2': 'apple',
-      },
-    }
-  }
-
-  queueSong = (song) => {
-    //create a unike key for each new fruit item
-    var timestamp = new Date().getTime()
-    // update the state object
-    this.state.songs['song-' + timestamp] = song
-    // set the state
-    this.setState({ songs: this.state.songs })
-  }
-  render() {
-    return (
-      <div className='component-wrapper'>
-        <Playlist songs={this.state.songs} />
-        <AddSong queueSong={this.queueSong} />
-      </div>
-    )
-  }
+const styles = (theme) => {
+  return {}
 }
 
-class Playlist extends React.Component {
-  render() {
-    return (
-      <div className='container'>
-        <ul className='list-group text-center'>
-          {Object.keys(this.props.songs).map(
-            function(key) {
-              return (
-                <li className='list-group-item list-group-item-info'>
-                  {this.props.songs[key]}
-                </li>
-              )
-            }.bind(this),
-          )}
-        </ul>
-      </div>
-    )
-  }
+function queueSong(song) {
+  //create a unike key for each new fruit item
+  var timestamp = new Date().getTime()
+  // update the state object
+  this.state.songs['song-' + timestamp] = song
+  // set the state
+  this.setState({ songs: this.state.songs })
 }
+
+function Playlist({ classes }, props) {
+  const [values, setValues] = useState({
+    songs: { hello: 'world' },
+  })
+
+  const handleChange = (name) => (event) => {
+    setValues({ ...values, [name]: event.target.value })
+  }
+
+  return (
+    <div className='container'>
+      <ul className='list-group text-center'>
+        {Object.keys(values.songs).map(
+          function(key) {
+            return (
+              <li className='list-group-item list-group-item-info'>
+                {values.songs[key]}
+              </li>
+            )
+          }.bind(this),
+        )}
+      </ul>
+    </div>
+  )
+}
+
+export default withStyles(styles)(Playlist)

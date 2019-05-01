@@ -17,6 +17,7 @@ import MenuIcon from '@material-ui/icons/Menu'
 import NotificationsIcon from '@material-ui/icons/Notifications'
 import { withStyles } from '@material-ui/core/styles'
 import Playlist from './Playlist'
+import Search from './Search'
 
 const styles = (theme) => {
   return {
@@ -141,6 +142,9 @@ function Party({ classes }, props) {
           </SoundSyncButton>
         </Toolbar>
       </AppBar>
+      {/* <AppBar>
+        <Search />
+      </AppBar> */}
       <IntegrationNotistack />
       <Playlist />
       <MusicControl className={classes.musicControl} />
